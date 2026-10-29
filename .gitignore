@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.log
+storage-data/
+.vite/
+coverage/

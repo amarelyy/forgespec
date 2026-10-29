@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: forgespec
+      POSTGRES_PASSWORD: forgespec
+      POSTGRES_DB: forgespec
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forgespec"]
+      interval: 5s
+      retries: 10
+
+  # Optional: run the API in a container (otherwise use `npm run dev` in backend/)
+  api:
+    build: ./backend
+    profiles: ["api"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://forgespec:forgespec@postgres:5432/forgespec
+      JWT_SECRET: ${JWT_SECRET:-}   # required: the API refuses to start in production without it
+      NODE_ENV: production
+      STORAGE_DIR: /data
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - "4000:4000"
+    volumes:
+      - apidata:/data
+
+volumes:
+  pgdata:
+  apidata:
