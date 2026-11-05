@@ -4,8 +4,11 @@ import { api as defaultApi } from './api';
 import { AuthDialog, AuthMode } from './AuthDialog';
 import { Footer } from './Footer';
 import { Header } from './Header';
+import { Carousel } from './Carousel';
+import { GuestBand } from './GuestBand';
 import { Hero } from './Hero';
-import { ValueProps } from './ValueProps';
+import { Sprite } from './Sprite';
+import { Walkthrough } from './Walkthrough';
 import { useSearch } from './useSearch';
 
 /** `api` is injectable so tests can run the page without a server. */
@@ -34,6 +37,7 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
 
   return (
     <>
+      <Sprite />
       <Header
         user={user}
         onLogin={() => openLogin()}
@@ -41,9 +45,11 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
         onGuest={focusSearch}
         onLogout={logout}
       />
-      <main>
-        <Hero inputRef={inputRef} search={search} signedIn={!!user} onNeedLogin={openLogin} />
-        <ValueProps />
+      <main id="top">
+        <Hero inputRef={inputRef} search={search} signedIn={!!user} onNeedLogin={openLogin} onGuest={focusSearch} />
+        <Carousel />
+        <Walkthrough />
+        <GuestBand onGuest={focusSearch} onLogin={() => openLogin()} onSignUp={() => setDialog({ mode: 'register' })} />
       </main>
       <Footer />
       <AuthDialog

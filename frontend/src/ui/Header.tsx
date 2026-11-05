@@ -1,5 +1,5 @@
 import type { User } from '../index';
-import { LogoMark } from './icons';
+import { LogoMark } from './Sprite';
 
 interface Props {
   user: User | null;
@@ -11,32 +11,32 @@ interface Props {
 
 export function Header({ user, onLogin, onSignUp, onGuest, onLogout }: Props) {
   return (
-    <header className="header">
-      <div className="container header__inner">
-        <a className="logo" href="/" aria-label="ForgeSpec home">
-          <LogoMark className="logo__mark" width={28} height={28} />
-          <span className="logo__text">ForgeSpec</span>
+    <header className="nav">
+      <div className="wrap">
+        <a className="logo" href="#top" aria-label="ForgeSpec home">
+          <LogoMark />
+          ForgeSpec
         </a>
 
-        <nav className="header__actions" aria-label="Account">
+        <nav className="nav-cta" aria-label="Account">
           {user ? (
             <>
-              <span className="header__user" title={user.email}>
+              <span className="nav-user" title={user.email}>
                 Signed in as <strong>{user.name}</strong>
               </span>
-              <button type="button" className="btn btn--ghost" onClick={onLogout}>
+              <button type="button" className="btn btn-outline" onClick={onLogout}>
                 Log Out
               </button>
             </>
           ) : (
             <>
-              <button type="button" className="btn btn--ghost" onClick={onLogin}>
+              <button type="button" className="btn btn-text" onClick={onLogin}>
                 Log In
               </button>
-              <button type="button" className="btn btn--outline" onClick={onSignUp}>
+              <button type="button" className="btn btn-outline" onClick={onSignUp}>
                 Sign Up
               </button>
-              <button type="button" className="btn btn--primary" onClick={onGuest}>
+              <button type="button" className="btn btn-primary" onClick={onGuest}>
                 Try as Guest
               </button>
             </>

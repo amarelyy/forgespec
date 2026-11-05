@@ -16,3 +16,8 @@ if (typeof HTMLDialogElement !== 'undefined' && !HTMLDialogElement.prototype.sho
 }
 // Not implemented in jsdom
 Element.prototype.scrollIntoView ??= () => undefined;
+// Not implemented in jsdom: the carousel and walkthrough read the reduced-motion preference.
+window.matchMedia ??= ((query: string) => ({
+  matches: false, media: query, onchange: null,
+  addEventListener: () => undefined, removeEventListener: () => undefined, addListener: () => undefined, removeListener: () => undefined, dispatchEvent: () => false,
+})) as unknown as typeof window.matchMedia;
