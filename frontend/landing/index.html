@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ForgeSpec · Version control for your bill of materials</title>
+<meta name="description" content="ForgeSpec is version control for your bill of materials. Browse parts, catch voltage and size problems while you plan, and export a clean list for suppliers.">
+<meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f141b" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,600..800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/main.js" defer></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M19 12H5m6-6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></symbol>
+  <symbol id="i-replay" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+</svg>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="ForgeSpec home">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="6" fill="#2563eb"/><path d="M8 7v12M8 10h5a3 3 0 0 1 3 3v6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><circle cx="8" cy="7" r="2.2" fill="#fff"/><circle cx="16" cy="19" r="2.2" fill="#fff"/><circle cx="8" cy="19" r="2.2" fill="#fff"/></svg>
+      ForgeSpec
+    </a>
+    <div class="nav-cta">
+      <a class="btn btn-text" href="#login">Log in</a>
+      <a class="btn btn-outline" href="#register">Register</a>
+      <a class="btn btn-primary" href="#library">Try as guest</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="hero" id="library">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1>Catch the 3.3&nbsp;V part on your 5&nbsp;V rail <em>before you buy it.</em></h1>
+        <p class="sub">ForgeSpec is version control for your bill of materials. It checks every part for voltage and size problems while you plan.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#library">Try as guest</a>
+          <a class="btn" href="#tour">Watch how it works</a>
+        </div>
+        <p class="hero-note">No account needed to browse parts. Press <kbd>/</kbd> to search.</p>
+      </div>
+
+      <div class="drawer" aria-label="Component Library preview">
+        <div class="dr-head"><b>Component Library</b><span class="tag">Guest</span></div>
+        <label class="search" for="q">
+          <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+          <input id="q" type="search" placeholder="Search part number, e.g. LM7805" autocomplete="off" aria-controls="plist">
+        </label>
+        <div class="chips" id="chips" aria-label="Filter by category"></div>
+        <div class="plist" id="plist" aria-label="Components"></div>
+        <div class="dr-foot"><span id="rcount"></span><span>Specs from distributor APIs</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOVING CAROUSEL -->
+  <section id="features">
+    <div class="wrap">
+      <div class="carousel" id="car" aria-roledescription="carousel" aria-label="What ForgeSpec does">
+        <div class="viewport" id="vp">
+          <div class="reel" id="reel" aria-live="off">
+
+            <div class="slide" role="group" aria-roledescription="slide" aria-label="1 of 4" data-label="Catch wrong parts">
+              <div class="slide-copy">
+                <h3>Catch wrong parts before you buy</h3>
+                <p>Every part in your list is checked against your power supply. Problems turn red right away.</p>
+              </div>
+              <div class="pic">
+                <table><tbody>
+                  <tr><td><span class="mpn">LM7805CT</span><div class="small">5 V regulator</div></td><td class="r"><span class="pill p-ok">Pass</span></td></tr>
+                  <tr><td><span class="mpn">ATMEGA328P-AU</span><div class="small">Microcontroller</div></td><td class="r"><span class="pill p-ok">Pass</span></td></tr>
+                  <tr class="bad"><td><span class="mpn">BME280</span><div class="why">Needs 1.71 – 3.6 V, but your rail is 5 V</div></td><td class="r"><span class="pill p-err">Error</span></td></tr>
+                </tbody></table>
+              </div>
+            </div>
+
+            <div class="slide" role="group" aria-roledescription="slide" aria-label="2 of 4" data-label="Compare versions">
+              <div class="slide-copy">
+                <h3>See what changed between versions</h3>
+                <p>Every save is a version. Compare any two and see what was added, removed or changed.</p>
+              </div>
+              <div class="pic">
+                <div class="small" style="margin-bottom:10px">Version 12 → version 14</div>
+                <table><tbody>
+                  <tr class="d-add"><td class="d-sign">+</td><td><span class="mpn">DRV8833PWPR</span><div class="small">Motor driver added</div></td><td class="r small">qty 1</td></tr>
+                  <tr class="d-rem"><td class="d-sign">−</td><td><span class="mpn">L298N</span><div class="small">Old driver removed</div></td><td class="r small">qty 1</td></tr>
+                  <tr class="d-mod"><td class="d-sign">~</td><td><span class="mpn">CL10B104KB8NNNC</span><div class="small">Quantity changed</div></td><td class="r small"><span class="old">4</span> → 6</td></tr>
+                </tbody></table>
+              </div>
+            </div>
+
+            <div class="slide" role="group" aria-roledescription="slide" aria-label="3 of 4" data-label="Specs read for you">
+              <div class="slide-copy">
+                <h3>Specs are read for you</h3>
+                <p>Datasheet text is turned into numbers the checks can use. If one is wrong, type the right value.</p>
+              </div>
+              <div class="pic">
+                <div class="parse">
+                  <span class="raw">"5.5V"</span>
+                  <svg class="ico arrow" style="width:28px;height:28px" aria-hidden="true"><use href="#i-right"/></svg>
+                  <span class="num">5.5 V <svg class="ico" aria-hidden="true"><use href="#i-pen"/></svg></span>
+                </div>
+                <div class="small" style="text-align:center">ATMEGA328P-AU · maximum supply voltage</div>
+              </div>
+            </div>
+
+            <div class="slide" role="group" aria-roledescription="slide" aria-label="4 of 4" data-label="Export for suppliers">
+              <div class="slide-copy">
+                <h3>Export a clean list for suppliers</h3>
+                <p>Download your parts list with quantities, prices and the total cost.</p>
+              </div>
+              <div class="pic">
+<pre class="csv">part,qty,unit_price,total
+LM7805CT,1,0.62,0.62
+ATMEGA328P-AU,1,2.89,2.89
+HC-SR04,2,1.95,3.90
+<b>TOTAL,,,7.41</b></pre>
+                <div class="exp-btns"><span>CSV</span><span>PDF</span></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <button class="arrow-btn prev" id="cprev" aria-label="Previous slide"><svg class="ico" aria-hidden="true"><use href="#i-left"/></svg></button>
+        <button class="arrow-btn next" id="cnext" aria-label="Next slide"><svg class="ico" aria-hidden="true"><use href="#i-right"/></svg></button>
+        <button class="car-pause" id="cplay" aria-label="Pause slideshow"><svg class="ico" aria-hidden="true"><use href="#i-pause"/></svg></button>
+        <div class="car-dots" id="dots"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WALKTHROUGH -->
+  <section class="block" id="tour">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Watch one sensor go from search to saved</h2>
+        <p>A robotics team needs a temperature sensor for their line-follower robot. Here is what happens.</p>
+      </div>
+      <div class="wt" id="wt">
+        <div>
+          <ol class="steps" id="steps">
+            <li class="step"><button><span class="n">1</span><span class="t">Search the part</span><span class="d">Type a part number. No account needed.</span><span class="track"><span class="fill"></span></span></button></li>
+            <li class="step"><button><span class="n">2</span><span class="t">Specs arrive</span><span class="d">Details come from the distributor and are turned into numbers.</span><span class="track"><span class="fill"></span></span></button></li>
+            <li class="step"><button><span class="n">3</span><span class="t">The check fails</span><span class="d">The sensor needs 3.3 V, but the robot runs on 5 V.</span><span class="track"><span class="fill"></span></span></button></li>
+            <li class="step"><button><span class="n">4</span><span class="t">Fix it</span><span class="d">Add a 3.3 V regulator. The row turns green.</span><span class="track"><span class="fill"></span></span></button></li>
+            <li class="step"><button><span class="n">5</span><span class="t">Save a version</span><span class="d">The whole team sees the change in version 15.</span><span class="track"><span class="fill"></span></span></button></li>
+          </ol>
+          <div class="wt-ctrl"><button id="wplay"><svg class="ico" aria-hidden="true"><use href="#i-pause"/></svg><span>Pause</span></button></div>
+        </div>
+
+        <div class="app" aria-label="Animated example of the ForgeSpec workspace">
+          <div class="app-bar"><b>line-follower-bot</b><span class="rev" id="arev">version 14</span><span style="margin-left:auto">Component List</span></div>
+          <div class="app-body">
+            <div class="a-search" id="asearch"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg><span class="typed" id="atyped"></span><span class="caret"></span><span id="aph">Search part number</span></div>
+            <div class="a-drop" id="adrop">
+              <div class="a-res">
+                <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="6" width="30" height="22" rx="2" fill="#6a3fb0"/><rect x="15" y="12" width="10" height="10" rx="1" fill="#e9edf1"/><rect x="11" y="28" width="2" height="5" fill="#9aa5b0"/><rect x="17" y="28" width="2" height="5" fill="#9aa5b0"/><rect x="23" y="28" width="2" height="5" fill="#9aa5b0"/><rect x="29" y="28" width="2" height="5" fill="#9aa5b0"/></svg>
+                <span><span class="mpn">BME280</span><div class="small">Temperature, humidity and pressure sensor</div></span>
+                <span class="add">Add</span>
+              </div>
+              <div class="a-specs">
+                <div class="spec"><span class="k">Supply</span><span class="raw">"1.71V ~ 3.6V"</span><span class="val">1.71 – 3.60 V</span></div>
+                <div class="spec"><span class="k">Draw</span><span class="raw">"3.6µA @ 1Hz"</span><span class="val">3.6 µA</span></div>
+                <div class="spec"><span class="k">Price</span><span class="raw">unit, qty 1</span><span class="val">$4.75</span></div>
+              </div>
+            </div>
+            <table class="a-table"><tbody>
+              <tr><td><span class="mpn">LM7805CT</span><div class="small">5 V regulator, powers the robot</div></td><td class="r"><span class="pill p-ok">Pass</span></td></tr>
+              <tr><td><span class="mpn">ATMEGA328P-AU</span><div class="small">Microcontroller</div></td><td class="r"><span class="pill p-ok">Pass</span></td></tr>
+              <tr><td><span class="mpn">HC-SR04</span><div class="small">Distance sensor</div></td><td class="r"><span class="pill p-ok">Pass</span></td></tr>
+              <tr class="a-row" id="rams"><td><span class="mpn">AMS1117-3.3</span><div class="small">3.3 V regulator, new</div></td><td class="r"><span class="pill p-ok">Pass</span></td></tr>
+              <tr class="a-row" id="rbme"><td><span class="mpn">BME280</span><div class="why" id="bwhy">Checking…</div></td><td class="r" id="bpill"><span class="pill p-warn">Checking</span></td></tr>
+            </tbody></table>
+            <div class="a-foot"><span id="asum"><span class="pill p-ok">3 passed</span></span><button class="a-commit" id="acommit" tabindex="-1" aria-hidden="true">Save version</button></div>
+            <div class="a-toast" id="atoast">Version 15 saved · 2 parts added</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUEST BAND -->
+  <section class="block" id="register">
+    <div class="wrap">
+      <div class="guest">
+        <div>
+          <h2>Look around first. Sign up when you want to save.</h2>
+          <p>Guests can search and read every part. An account lets you save projects, add your own parts and invite your team.</p>
+        </div>
+        <div class="acts">
+          <a class="btn" href="#library">Try as guest</a>
+          <a class="btn ghost" href="#register">Register</a>
+          <a class="btn ghost" href="#login" id="login">Log in</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="logo" href="#top">ForgeSpec</a>
+    <nav aria-label="Footer"><a href="#library">Component Library</a><a href="#features">Features</a><a href="#docs">Documentation</a><a href="#contact">Contact us</a></nav>
+    <span>© 2026 ForgeSpec · Aurellia Safa Madrim and Ursula Maurentti Amarely</span>
+  </div>
+</footer>
+
+</body>
+</html>
