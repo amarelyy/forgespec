@@ -1,5 +1,6 @@
 import type { User } from '../index';
 import { LogoMark } from './Sprite';
+import { UserMenu } from './UserMenu';
 
 interface Props {
   user: User | null;
@@ -20,14 +21,7 @@ export function Header({ user, onLogin, onSignUp, onGuest, onLogout }: Props) {
 
         <nav className="nav-cta" aria-label="Account">
           {user ? (
-            <>
-              <span className="nav-user" title={user.email}>
-                Signed in as <strong>{user.name}</strong>
-              </span>
-              <button type="button" className="btn btn-outline" onClick={onLogout}>
-                Log Out
-              </button>
-            </>
+            <UserMenu user={user} onLogout={onLogout} />
           ) : (
             <>
               <button type="button" className="btn btn-text" onClick={onLogin}>

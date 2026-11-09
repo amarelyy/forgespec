@@ -7,6 +7,9 @@ import { Header } from './Header';
 import { Carousel } from './Carousel';
 import { GuestBand } from './GuestBand';
 import { Hero } from './Hero';
+import { LibrarySection } from './LibrarySection';
+import { LibraryPage } from './LibraryPage';
+import { navigate, usePath } from './router';
 import { Sprite } from './Sprite';
 import { Walkthrough } from './Walkthrough';
 import { useSearch } from './useSearch';
@@ -17,6 +20,7 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
   const [dialog, setDialog] = useState<{ mode: AuthMode; reason?: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const search = useSearch(api);
+  const path = usePath();
 
   // Restore the session if tokens are stored. Guests never see an error here.
   useEffect(() => {
@@ -25,15 +29,37 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
   }, [api]);
 
   const openLogin = useCallback((reason?: string) => setDialog({ mode: 'login', reason }), []);
-  const focusSearch = useCallback(() => {
-    inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    inputRef.current?.focus({ preventScroll: true });
-  }, []);
+  // Every "as guest" button leads to the full-page Component Library.
+  const goLibrary = useCallback(() => navigate('/library'), []);
 
   const logout = async () => {
     await api.auth.logout().catch(() => undefined);
     setUser(null);
   };
+
+  const authDialog = (
+    <AuthDialog
+      mode={dialog?.mode ?? null}
+      reason={dialog?.reason}
+      api={api}
+      onModeChange={(mode) => setDialog({ mode })}
+      onClose={() => setDialog(null)}
+      onSuccess={(u) => {
+        setUser(u);
+        setDialog(null);
+      }}
+    />
+  );
+
+  if (path === '/library') {
+    return (
+      <>
+        <Sprite />
+        <LibraryPage search={search} user={user} onLogin={openLogin} onSignUp={() => setDialog({ mode: 'register' })} onLogout={logout} />
+        {authDialog}
+      </>
+    );
+  }
 
   return (
     <>
@@ -42,27 +68,18 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
         user={user}
         onLogin={() => openLogin()}
         onSignUp={() => setDialog({ mode: 'register' })}
-        onGuest={focusSearch}
+        onGuest={goLibrary}
         onLogout={logout}
       />
       <main id="top">
-        <Hero inputRef={inputRef} search={search} signedIn={!!user} onNeedLogin={openLogin} onGuest={focusSearch} />
+        <Hero onGuest={goLibrary} />
         <Carousel />
         <Walkthrough />
-        <GuestBand onGuest={focusSearch} onLogin={() => openLogin()} onSignUp={() => setDialog({ mode: 'register' })} />
+        <LibrarySection inputRef={inputRef} search={search} signedIn={!!user} onNeedLogin={openLogin} />
+        <GuestBand onGuest={goLibrary} onLogin={() => openLogin()} onSignUp={() => setDialog({ mode: 'register' })} />
       </main>
       <Footer />
-      <AuthDialog
-        mode={dialog?.mode ?? null}
-        reason={dialog?.reason}
-        api={api}
-        onModeChange={(mode) => setDialog({ mode })}
-        onClose={() => setDialog(null)}
-        onSuccess={(u) => {
-          setUser(u);
-          setDialog(null);
-        }}
-      />
+      {authDialog}
     </>
   );
 }

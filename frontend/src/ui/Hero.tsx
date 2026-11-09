@@ -1,18 +1,10 @@
-import type { RefObject } from 'react';
-import { PartDrawer } from './PartDrawer';
-import type { useSearch } from './useSearch';
-
 interface Props {
-  inputRef: RefObject<HTMLInputElement | null>;
-  search: ReturnType<typeof useSearch>;
-  signedIn: boolean;
-  onNeedLogin: (reason: string) => void;
   onGuest: () => void;
 }
 
-export function Hero({ inputRef, search, signedIn, onNeedLogin, onGuest }: Props) {
+export function Hero({ onGuest }: Props) {
   return (
-    <section className="hero" id="library" aria-labelledby="hero-title">
+    <section className="hero" id="hero" aria-labelledby="hero-title">
       <div className="wrap hero-grid">
         <div className="hero-copy">
           <h1 id="hero-title">
@@ -34,7 +26,10 @@ export function Hero({ inputRef, search, signedIn, onNeedLogin, onGuest }: Props
           </p>
         </div>
 
-        <PartDrawer inputRef={inputRef} search={search} signedIn={signedIn} onNeedLogin={onNeedLogin} />
+        {/* Reserved for the 3D circuit board (next step). Decorative only, so hidden from screen readers. */}
+        <div className="hero-stage" aria-hidden="true">
+          <span>3D circuit board goes here</span>
+        </div>
       </div>
     </section>
   );
