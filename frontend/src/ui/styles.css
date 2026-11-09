@@ -72,6 +72,10 @@ kbd{font-family:var(--font-mono);font-size:.78em;border:1px solid var(--line);bo
 .hero h1 em{font-style:normal;color:var(--accent-text)}
 .hero .sub{font-size:1.15rem;max-width:44ch}
 .hero-actions{display:flex;flex-wrap:wrap;gap:12px}
+/* Enter Workspace on top as one long button, as wide as the two buttons under it. */
+.hero .hero-actions{display:grid;grid-template-columns:repeat(2,max-content);gap:12px}
+.hero-main{grid-column:1/-1;padding-block:14px;font-size:1rem}
+@media (max-width:440px){.hero .hero-actions{grid-template-columns:1fr}}
 .hero-note{font-size:.92rem}
 @media (max-width:920px){.hero-grid{grid-template-columns:1fr}.drawer{max-width:560px}}
 
@@ -346,41 +350,65 @@ main section[id]{scroll-margin-top:72px}
 /* Error pop-ups (the BME280 and the 5 V mistake wire) get a red edge. */
 .hb-tip.is-error{box-shadow:inset 3px 0 0 var(--err),var(--shadow)}
 
-/* ---------- main header navigation (text only, standard dropdowns) ---------- */
-.site-nav{margin-left:12px}
-.sn-bar{display:flex;align-items:center;gap:2px;margin:0;padding:0;list-style:none}
-.sn-bar>li{position:relative}
-.sn-top{display:block;padding:8px 12px;border:0;border-radius:8px;background:none;font:500 .95rem var(--font-body);color:var(--text);text-decoration:none;cursor:pointer;white-space:nowrap}
-.sn-top:hover,.sn-bar>li.is-open>.sn-top{color:var(--ink);background:var(--bg-2)}
-.sn-panel{position:absolute;left:0;top:calc(100% + 6px);z-index:30;min-width:240px;padding:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);animation:umenu-in .14s ease-out}
-.sn-panel[hidden]{display:none}
-/* Invisible bridge so moving the mouse from the label into the panel does not close it. */
-.sn-panel::before{content:"";position:absolute;left:0;right:0;top:-8px;height:8px}
-.sn-panel.is-wide{display:grid;grid-template-columns:1fr 1.2fr;gap:8px;min-width:480px}
-.sn-panel.is-wide[hidden]{display:none}
-.sn-group ul{margin:0;padding:0;list-style:none}
-.sn-label{display:flex;flex-direction:column;padding:6px 10px 6px;font-size:.78rem}
-.sn-label strong{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
-.sn-link{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;padding:7px 10px;border:0;border-radius:8px;background:none;
-  font:inherit;font-size:.9rem;color:var(--ink);text-align:left;text-decoration:none;cursor:pointer}
-.sn-link:hover{background:var(--sunk)}
-.sn-link small{font-size:.72rem;color:var(--text)}
-.sn-link.is-child{padding-left:24px;font-size:.86rem}
-.sn-link.is-soon{color:var(--text);cursor:default}
-.sn-link.is-soon:hover{background:none}
-
 .umenu-label{margin:6px 0 0;padding:8px 12px 2px;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--ink);border-top:1px solid var(--line)}
 .umenu-sub{display:flex;justify-content:space-between;gap:12px;padding:7px 12px 7px 20px;font-size:.88rem;color:var(--text)}
 .umenu-sub small{font-size:.72rem}
 
-/* Laptop widths where the header gets tight: the nav moves to its own row under the logo. */
+
+/* ---------- header: brand left, mega-menu tabs centred, account right ---------- */
+.nav .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:16px}
+.nav-brand{display:flex;align-items:center;gap:4px;justify-self:start}
+.nav-home{display:grid;place-items:center;width:36px;height:36px;margin-left:-8px;border-radius:8px;color:var(--ink)}
+.nav-home:hover{background:var(--bg-2)}
+.nav-home .ico{width:20px;height:20px}
+.nav-cta{justify-self:end}
+
+.site-nav{display:flex;align-self:stretch}
+.sn-bar{display:flex;gap:32px;margin:0;padding:0;list-style:none}
+.sn-bar>li{display:flex}
+.sn-top{position:relative;padding:0 2px;border:0;background:none;font:700 .8rem var(--font-body);letter-spacing:.09em;text-transform:uppercase;color:var(--ink);cursor:pointer;white-space:nowrap}
+/* The open tab gets a thick underline sitting on the header's bottom edge. */
+.sn-top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--ink);transform:scaleX(0);transition:transform .2s ease}
+.sn-top:hover::after,.sn-top[aria-expanded="true"]::after{transform:scaleX(1)}
+
+.sn-panel{position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  box-shadow:0 28px 40px -28px rgb(15 20 27 / .3);animation:sn-in .16s ease-out}
+.sn-panel[hidden]{display:none}
+@keyframes sn-in{from{opacity:0;transform:translateY(-4px)}}
+/* Own container (not .wrap: the header styles every .wrap inside it as a 64px row). */
+.sn-grid{display:grid;grid-template-columns:repeat(2,minmax(0,230px)) minmax(0,1fr);gap:48px;max-width:1160px;margin:0 auto;padding:32px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+.sn-label{display:flex;flex-direction:column;gap:2px;margin:0 0 8px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.sn-label strong{font:700 .76rem var(--font-body);letter-spacing:.09em;text-transform:uppercase;color:var(--ink)}
+.sn-label span{font-size:.78rem}
+.sn-group ul{margin:0;padding:0;list-style:none}
+.sn-link{display:block;width:100%;padding:7px 0;border:0;background:none;font:inherit;text-align:left;color:var(--ink);cursor:pointer;outline-offset:2px}
+.sn-name{display:flex;align-items:baseline;gap:8px;font-size:.95rem}
+.sn-link:hover .sn-name,.sn-link:focus-visible .sn-name{text-decoration:underline;text-underline-offset:4px}
+.sn-name small{font-size:.7rem;color:var(--text)}
+.sn-link.is-child{padding-left:16px}
+.sn-link.is-soon{color:var(--text);cursor:default}
+.sn-desc{display:none}
+
+/* Right-hand preview: explains the hovered item; two items also show a small 3D loop. */
+.sn-preview{display:flex;flex-direction:column;gap:6px;min-height:270px;padding-left:40px;border-left:1px solid var(--line)}
+.sn-preview strong{font:700 1.05rem var(--font-display);color:var(--ink)}
+.sn-preview p{font-size:.9rem;max-width:48ch}
+.sn-hint{font-size:.82rem!important;opacity:.75}
+.mv-stage{position:relative;height:220px;margin-bottom:6px;border-radius:12px;background:radial-gradient(ellipse 60% 55% at 50% 55%,var(--accent-soft),transparent 75%)}
+.mv-canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
+
+/* Dims the page under the open menu. (Absolute, because the header's backdrop-filter traps fixed children.) */
+.sn-scrim{position:absolute;left:0;right:0;top:100%;height:100vh;z-index:25;background:rgb(15 20 27 / .22);animation:sn-fade .2s ease-out}
+@keyframes sn-fade{from{opacity:0}}
+
+/* Narrow screens: tabs on their own row under the brand; the panel is one column and each item shows its explanation inline. */
 @media (max-width:900px){
-  .nav .wrap{flex-wrap:wrap;height:auto;padding-block:10px;row-gap:4px}
-  .site-nav{order:3;width:100%;margin:0 0 0 -12px}
-  .sn-bar>li{position:static}
-  .sn-panel,.sn-panel.is-wide{left:16px;right:16px;min-width:0}
+  .nav .wrap{grid-template-columns:1fr auto;height:auto;row-gap:0;padding-top:8px}
+  .nav-cta{grid-row:1;grid-column:2}
+  .site-nav{grid-row:2;grid-column:1/-1;height:44px}
+  .sn-bar{gap:24px}
+  .sn-grid{grid-template-columns:1fr;gap:20px;padding-block:20px 24px;max-height:calc(100vh - 120px);overflow-y:auto}
+  .sn-preview{display:none}
+  .sn-desc{display:block;font-size:.8rem;color:var(--text);line-height:1.4;margin-top:2px}
 }
-@media (max-width:560px){
-  .sn-panel.is-wide{grid-template-columns:1fr}
-  .sn-top{padding:8px 10px;font-size:.9rem}
-}
+@media (prefers-reduced-motion:reduce){.sn-panel,.sn-scrim{animation:none}.sn-top::after{transition:none}}

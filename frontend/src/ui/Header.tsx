@@ -1,5 +1,5 @@
 import type { User } from '../index';
-import { LogoMark } from './Sprite';
+import { Icon, LogoMark } from './Sprite';
 import { SiteNav } from './SiteNav';
 import { UserMenu } from './UserMenu';
 
@@ -17,10 +17,15 @@ export function Header({ user, onLogin, onSignUp, onGuest, onLogout, onNeedLogin
   return (
     <header className="nav">
       <div className="wrap">
-        <a className="logo" href="#top" aria-label="ForgeSpec home">
-          <LogoMark />
-          ForgeSpec
-        </a>
+        <div className="nav-brand">
+          <a className="nav-home" href="#top" aria-label="Home" title="Home">
+            <Icon name="home" />
+          </a>
+          <a className="logo" href="#top" aria-label="ForgeSpec home">
+            <LogoMark />
+            ForgeSpec
+          </a>
+        </div>
 
         <SiteNav signedIn={!!user} onNeedLogin={onNeedLogin} onLibrary={onLibrary} />
 

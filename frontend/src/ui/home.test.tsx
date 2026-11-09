@@ -211,10 +211,11 @@ describe('landing page', () => {
 describe('header navigation', () => {
   const main = () => within(screen.getByRole('navigation', { name: 'Main' }));
 
-  it('shows Home, Dashboard and Component Library as text links, with submenus from the site map', async () => {
+  it('has a house icon for Home, and Dashboard and Component Library tabs with submenus from the site map', async () => {
     render(<App api={fakeApi(vi.fn())} />);
     const user = userEvent.setup();
-    expect(main().getByRole('link', { name: 'Home' })).toHaveAttribute('href', '#top');
+    expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Home' })).toHaveAttribute('href', '#top');
+    expect(main().queryByRole('link', { name: 'Home' })).not.toBeInTheDocument();
 
     const dash = main().getByRole('button', { name: 'Dashboard' });
     expect(dash).toHaveAttribute('aria-expanded', 'false');
@@ -240,8 +241,32 @@ describe('header navigation', () => {
     await user.keyboard('{Escape}');
 
     await user.click(main().getByRole('button', { name: 'Component Library' }));
-    await user.click(main().getByRole('button', { name: 'Search components' }));
+    await user.click(main().getByRole('button', { name: /^Search components/ }));
     expect(screen.getByPlaceholderText(PLACEHOLDER)).toHaveFocus();
+  });
+});
+
+describe('hero', () => {
+  it('has an Enter Workspace button that asks guests to log in', async () => {
+    render(<App api={fakeApi(vi.fn())} />);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Enter Workspace' }));
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Log in to enter your workspace.');
+  });
+});
+
+describe('menu preview', () => {
+  it('explains the hovered item in the preview area', async () => {
+    render(<App api={fakeApi(vi.fn())} />);
+    const user = userEvent.setup();
+    const nav = within(screen.getByRole('navigation', { name: 'Main' }));
+    await user.hover(nav.getByRole('button', { name: 'Dashboard' }));
+    const panel = document.getElementById('sn-dashboard')!;
+    const preview = within(panel.querySelector<HTMLElement>('.sn-preview')!);
+    expect(preview.getByText('Your projects, and everything inside each one.')).toBeInTheDocument();
+
+    await user.hover(within(panel).getByRole('button', { name: /^Sub-assemblies/ }));
+    expect(preview.getByText('Sub-assemblies')).toBeInTheDocument();
+    expect(preview.getByText(/drop it into any project as a single piece/)).toBeInTheDocument();
   });
 });
 

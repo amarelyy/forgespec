@@ -64,7 +64,7 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
         onLibrary={goLibrary}
       />
       <main id="top">
-        <Hero onGuest={goLibrary} />
+        <Hero onGuest={goLibrary} signedIn={!!user} onNeedLogin={openLogin} />
         <Carousel />
         <Walkthrough />
         <LibrarySection inputRef={inputRef} search={search} signedIn={!!user} onNeedLogin={openLogin} />

@@ -10,11 +10,12 @@ export function Sprite() {
       <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z" /></symbol>
       <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></symbol>
       <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z" /></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5" /><path d="M5.5 9.5V20h13V9.5" /><path d="M10 20v-5.5h4V20" /></symbol>
     </svg>
   );
 }
 
-export type IconName = 'search' | 'chev' | 'left' | 'right' | 'pause' | 'play' | 'lock' | 'pen';
+export type IconName = 'search' | 'chev' | 'left' | 'right' | 'pause' | 'play' | 'lock' | 'pen' | 'home';
 
 export function Icon({ name, size, className = '' }: { name: IconName; size?: number; className?: string }) {
   return (
