@@ -1,18 +1,17 @@
 import { HeroBoard } from './HeroBoard';
 import type { BoardPick } from './boardMotion';
-import { navigate } from './router';
 
 interface Props {
   onGuest: () => void;
 }
 
-/** Board parts link into the page: the MCU opens the library, the red sensor shows the check, the regulator the walkthrough. */
-const onPick = (id: BoardPick) => {
-  if (id === 'mcu') navigate('/library');
-  else document.getElementById(id === 'sensor' ? 'features' : 'tour')?.scrollIntoView({ behavior: 'smooth' });
-};
 
 export function Hero({ onGuest }: Props) {
+  // Board parts link into the page: the MCU to the library, the red sensor to the check, the regulator to the walkthrough.
+  const onPick = (id: BoardPick) => {
+    if (id === 'mcu') onGuest();
+    else document.getElementById(id === 'sensor' ? 'features' : 'tour')?.scrollIntoView({ behavior: 'smooth' });
+  };
   return (
     <section className="hero" id="hero" aria-labelledby="hero-title">
       <div className="wrap hero-grid">

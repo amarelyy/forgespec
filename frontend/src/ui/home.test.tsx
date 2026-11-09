@@ -167,9 +167,11 @@ describe('landing page', () => {
     expect(menu).toHaveFocus();
 
     await user.click(menu);
-    await user.click(within(screen.getByRole('navigation', { name: 'Pages' })).getByRole('link', { name: 'Component Library' }));
-    expect(window.location.pathname).toBe('/library');
-    await user.click(screen.getByRole('button', { name: 'Account menu' }));
+    const pages = within(screen.getByRole('navigation', { name: 'Pages' }));
+    expect(pages.getByRole('link', { name: 'Home' })).toBeVisible();
+    expect(pages.getByText('Settings')).toBeVisible();
+    expect(pages.getByText(/Account Profile/)).toHaveAttribute('aria-disabled', 'true');
+    expect(pages.getByText(/Team Members & Roles/)).toHaveAttribute('aria-disabled', 'true');
     await user.click(screen.getByRole('button', { name: 'Log Out' }));
     expect(await within(screen.getByRole('banner')).findByRole('button', { name: 'Sign Up' })).toBeVisible();
   });
@@ -189,64 +191,57 @@ describe('landing page', () => {
     expect(within(dialog).getByLabelText('Password')).toBeInvalid();
   });
 
-  it('every guest button opens the Component Library page, and Home comes back', async () => {
+  it('every guest button takes you to the Component Library search on this page', async () => {
     render(<App api={fakeApi(vi.fn())} />);
     const user = userEvent.setup();
+    const box = screen.getByPlaceholderText(PLACEHOLDER);
     await user.click(screen.getByRole('button', { name: 'Try as Guest' }));
-    expect(window.location.pathname).toBe('/library');
-    expect(screen.getByRole('heading', { level: 1, name: 'Component Library' })).toBeVisible();
-    expect(screen.getByText('Guest mode')).toBeVisible();
-
-    await user.click(screen.getByRole('link', { name: 'Home' }));
+    expect(box).toHaveFocus();
     expect(window.location.pathname).toBe('/');
-    await user.click(screen.getAllByRole('button', { name: 'Browse parts as guest' })[0]!);
-    expect(window.location.pathname).toBe('/library');
+
+    box.blur();
+    for (const b of screen.getAllByRole('button', { name: 'Browse parts as guest' })) {
+      await user.click(b);
+      expect(box).toHaveFocus();
+      box.blur();
+    }
   });
 });
 
-describe('library page', () => {
-  const library = () => within(screen.getByRole('region', { name: 'Component Library' }));
+describe('header navigation', () => {
+  const main = () => within(screen.getByRole('navigation', { name: 'Main' }));
 
-  it('searches for real, shows the parsed specs of the chosen part, and keeps the query in the URL', async () => {
-    window.history.replaceState(null, '', '/library');
-    const search = vi.fn().mockResolvedValue(found([esp]));
-    render(<App api={fakeApi(search)} />);
-    const user = userEvent.setup();
-
-    await user.type(library().getByRole('searchbox'), 'esp32');
-    await library().findByRole('button', { name: /ESP32-WROOM-32\s*ESP32 module/ }, { timeout: 2000 });
-    expect(search).toHaveBeenLastCalledWith({ q: 'esp32', limit: 12 });
-    expect(window.location.search).toBe('?q=esp32');
-
-    const details = within(screen.getByRole('complementary', { name: 'Part details' }));
-    expect(details.getByRole('heading', { name: 'ESP32-WROOM-32' })).toBeVisible();
-    expect(details.getByText('"500mA"')).toBeVisible();
-    expect(details.getByText('0.5 A')).toBeVisible();
-  });
-
-  it('reads the search from the URL, browses with the arrow keys, and asks guests to log in to save', async () => {
-    window.history.replaceState(null, '', '/library?cat=Power');
+  it('shows Home, Dashboard and Component Library as text links, with submenus from the site map', async () => {
     render(<App api={fakeApi(vi.fn())} />);
     const user = userEvent.setup();
-    expect(library().getByRole('button', { name: 'Power' })).toHaveAttribute('aria-pressed', 'true');
+    expect(main().getByRole('link', { name: 'Home' })).toHaveAttribute('href', '#top');
 
-    const items = () => document.querySelectorAll('.lib-item');
-    expect(items().length).toBeGreaterThan(1);
-    expect(items()[0]).toHaveAttribute('aria-current', 'true');
-    await user.click(library().getByRole('searchbox'));
-    await user.keyboard('{ArrowDown}');
-    expect(items()[1]).toHaveAttribute('aria-current', 'true');
-
-    await user.click(within(screen.getByRole('complementary', { name: 'Part details' })).getByRole('button', { name: 'Log in to save' }));
-    expect(screen.getByText('Log in to save parts to a project.')).toBeVisible();
+    const dash = main().getByRole('button', { name: 'Dashboard' });
+    expect(dash).toHaveAttribute('aria-expanded', 'false');
+    await user.hover(dash);
+    expect(dash).toHaveAttribute('aria-expanded', 'true');
+    const panel = within(document.getElementById('sn-dashboard')!);
+    for (const t of ['Your projects', 'Create new project', 'Component List (BOM)', 'Version History', 'Compare Versions', 'Compatibility Report', 'Sub-assemblies', 'Export']) {
+      expect(panel.getByText(t)).toBeVisible();
+    }
+    expect(panel.getByText('Opens from a project')).toBeVisible();
+    await user.keyboard('{Escape}');
+    expect(dash).toHaveAttribute('aria-expanded', 'false');
+    expect(dash).toHaveFocus();
+    expect(document.body.textContent).not.toMatch(EMOJI_RE);
   });
 
-  it('shows the not-found state for an unknown part', async () => {
-    window.history.replaceState(null, '', '/library');
-    render(<App api={fakeApi(vi.fn().mockResolvedValue(found([])))} />);
-    await userEvent.setup().type(library().getByRole('searchbox'), 'XYZ999');
-    expect(await library().findByText('Component not found', {}, { timeout: 2000 })).toBeVisible();
-    expect(document.body.textContent).not.toMatch(EMOJI_RE);
+  it('sends guests to log in for project pages, and Search components jumps to the library', async () => {
+    render(<App api={fakeApi(vi.fn())} />);
+    const user = userEvent.setup();
+    await user.click(main().getByRole('button', { name: 'Dashboard' }));
+    await user.click(main().getByRole('button', { name: /^Your projects/ }));
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Log in to open your projects.');
+    await user.keyboard('{Escape}');
+
+    await user.click(main().getByRole('button', { name: 'Component Library' }));
+    await user.click(main().getByRole('button', { name: 'Search components' }));
+    expect(screen.getByPlaceholderText(PLACEHOLDER)).toHaveFocus();
   });
 });
 

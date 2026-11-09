@@ -1,5 +1,6 @@
 import type { User } from '../index';
 import { LogoMark } from './Sprite';
+import { SiteNav } from './SiteNav';
 import { UserMenu } from './UserMenu';
 
 interface Props {
@@ -8,9 +9,11 @@ interface Props {
   onSignUp: () => void;
   onGuest: () => void;
   onLogout: () => void;
+  onNeedLogin: (reason: string) => void;
+  onLibrary: () => void;
 }
 
-export function Header({ user, onLogin, onSignUp, onGuest, onLogout }: Props) {
+export function Header({ user, onLogin, onSignUp, onGuest, onLogout, onNeedLogin, onLibrary }: Props) {
   return (
     <header className="nav">
       <div className="wrap">
@@ -18,6 +21,8 @@ export function Header({ user, onLogin, onSignUp, onGuest, onLogout }: Props) {
           <LogoMark />
           ForgeSpec
         </a>
+
+        <SiteNav signedIn={!!user} onNeedLogin={onNeedLogin} onLibrary={onLibrary} />
 
         <nav className="nav-cta" aria-label="Account">
           {user ? (

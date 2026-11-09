@@ -290,79 +290,6 @@ button{font-family:inherit}
 .notice{border-radius:8px;padding:12px 14px;font-size:.9rem;border:1px solid var(--line);background:var(--surface)}
 .notice--error{border-color:var(--err);color:var(--err-text);background:var(--err-bg)}
 
-/* ---------- library page (/library): the guest search page ---------- */
-.lib{min-height:100vh;min-height:100dvh}
-.lib-back{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;color:var(--text);text-decoration:none;padding:6px 10px;border-radius:8px}
-.lib-back:hover{color:var(--ink);background:var(--bg-2)}
-.lib-main{padding-block:36px 56px}
-.lib-intro{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:24px}
-.lib-intro h1{font-size:clamp(2rem,4.2vw,2.9rem);font-weight:800}
-.lib-intro p{max-width:56ch}
-.lib-tag{font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:2px 10px;background:var(--surface)}
-
-.lib-box{border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
-.lib-tools{border-bottom:1px solid var(--line)}
-.lib-search{margin:16px 16px 12px;padding:12px 14px}
-.lib-search input{font-size:1.05rem}
-.lib-search input::-webkit-search-cancel-button{display:none}
-.lib-clear{flex:none;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:var(--text);font-size:1.3rem;line-height:1;cursor:pointer}
-.lib-clear:hover{background:var(--bg-2);color:var(--ink)}
-.lib-kbd{flex:none}
-.lib-suggest{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:0 16px 14px;font-size:.85rem}
-.lib-suggest button{border:0;background:none;padding:2px 4px;font:600 .82rem var(--font-mono);color:var(--accent-text);cursor:pointer;border-radius:4px}
-.lib-suggest button:hover{text-decoration:underline;text-underline-offset:3px}
-
-.lib-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);height:clamp(440px,calc(100dvh - 330px),720px)}
-.lib-list{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-.lib-item{transition:background-color .12s}
-.lib-item.is-current{background:var(--accent-soft)}
-.lib-item.is-current .chev{color:var(--accent-text)}
-.lib-skeleton{display:grid;gap:10px;padding:16px}
-.lib-skeleton span{height:44px;border-radius:8px;background:linear-gradient(90deg,var(--sunk) 0%,var(--bg-2) 50%,var(--sunk) 100%);background-size:200% 100%;animation:lib-shimmer 1.2s linear infinite}
-@keyframes lib-shimmer{to{background-position:-200% 0}}
-
-.lib-detail{border-left:1px solid var(--line);overflow-y:auto;padding:22px 22px 26px;display:flex;flex-direction:column;gap:14px;background:var(--surface)}
-.lib-detail-head{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:14px;align-items:center}
-.lib-detail-head svg.part{width:52px;height:52px}
-.lib-detail-head h2{font-size:1.2rem;font-weight:700;overflow-wrap:anywhere}
-.lib-detail-head p{font-size:.9rem}
-.lib-close{display:none;width:36px;height:36px;border:0;border-radius:8px;background:var(--bg-2);color:var(--ink);font-size:1.4rem;line-height:1;cursor:pointer}
-.lib-specs{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.lib-specs .spec{grid-template-columns:minmax(96px,42%) minmax(0,1fr) auto;padding:10px 12px;font-size:.88rem}
-.lib-specs .spec+.spec{border-top:1px solid var(--line)}
-.lib-specs .raw{white-space:normal;overflow-wrap:anywhere}
-.lib-src{font-size:.82rem}
-.lib-none{margin:auto;text-align:center}
-.lib-save{align-self:flex-start}
-.lib-grab,.lib-scrim{display:none}
-.lib-hint kbd{font-size:.72rem}
-
-@media (max-width:1100px){.lib-body{grid-template-columns:minmax(0,1fr) minmax(0,360px)}}
-
-/* Phones and small tablets: one column, the page scrolls, details slide up as a bottom sheet. */
-@media (max-width:820px){
-  .lib-back span{display:none}
-  .lib-main{padding-block:24px 40px}
-  .lib-body{display:block;height:auto}
-  .lib-list{overflow:visible}
-  .lib-item{padding-block:12px}
-  .lib-hint{display:none}
-  .lib-scrim{display:block;position:fixed;inset:0;z-index:40;border:0;background:rgb(15 20 27 / .45);animation:lib-fade .2s ease-out}
-  .lib-detail{position:fixed;left:0;right:0;bottom:0;z-index:41;max-height:86dvh;border:0;border-radius:18px 18px 0 0;
-    padding:10px 18px calc(22px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 40px rgb(15 20 27 / .25);
-    transform:translateY(100%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s .28s}
-  .lib-detail.is-open{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
-  .lib-grab{display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 4px}
-  .lib-close{display:grid;place-items:center}
-  .lib-save{align-self:stretch}
-}
-@media (max-width:420px){.lib-search{margin:12px 12px 10px}}
-/* No "Try as Guest" here, so Sign Up keeps its place on small phones; no keyboard hint on touch screens. */
-.lib .nav-cta .btn-outline{display:inline-flex}
-@media (pointer:coarse){.lib-kbd,.lib-hint{display:none}}
-@keyframes lib-fade{from{opacity:0}}
-@media (prefers-reduced-motion:reduce){.lib-skeleton span,.lib-scrim{animation:none}.lib-detail,.lib-detail.is-open{transition:none}}
-
 /* ---------- signed-in menu: three-line button + account panel ---------- */
 .umenu{position:relative}
 .umenu-btn{display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);cursor:pointer;transition:border-color .15s,background-color .15s}
@@ -408,3 +335,52 @@ button{font-family:inherit}
 @media (max-width:920px){.lib-section-grid{grid-template-columns:1fr}.lib-section .drawer{max-width:none}}
 /* Section links (#features, #tour, #library) stop below the sticky 64px header instead of under it. */
 main section[id]{scroll-margin-top:72px}
+
+/* Board: drag to turn (vertical swipes still scroll on phones), plus a one-line hint under it. */
+.hb-canvas{touch-action:pan-y;cursor:grab}
+.hb-hint{position:absolute;left:50%;bottom:8px;translate:-50% 0;z-index:1;pointer-events:none;white-space:nowrap;font-size:.8rem;color:var(--text);
+  padding:4px 12px;border-radius:999px;background:color-mix(in srgb,var(--surface) 80%,transparent);border:1px solid var(--line);opacity:0;transition:opacity .4s}
+.hero-stage.is-ready .hb-hint{opacity:1;transition-delay:3.4s}
+.hero-stage.has-turned .hb-hint{opacity:0;transition-delay:0s}
+@media (max-width:420px){.hb-hint{font-size:.72rem;white-space:normal;text-align:center;width:max-content;max-width:calc(100% - 24px)}}
+/* Error pop-ups (the BME280 and the 5 V mistake wire) get a red edge. */
+.hb-tip.is-error{box-shadow:inset 3px 0 0 var(--err),var(--shadow)}
+
+/* ---------- main header navigation (text only, standard dropdowns) ---------- */
+.site-nav{margin-left:12px}
+.sn-bar{display:flex;align-items:center;gap:2px;margin:0;padding:0;list-style:none}
+.sn-bar>li{position:relative}
+.sn-top{display:block;padding:8px 12px;border:0;border-radius:8px;background:none;font:500 .95rem var(--font-body);color:var(--text);text-decoration:none;cursor:pointer;white-space:nowrap}
+.sn-top:hover,.sn-bar>li.is-open>.sn-top{color:var(--ink);background:var(--bg-2)}
+.sn-panel{position:absolute;left:0;top:calc(100% + 6px);z-index:30;min-width:240px;padding:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);animation:umenu-in .14s ease-out}
+.sn-panel[hidden]{display:none}
+/* Invisible bridge so moving the mouse from the label into the panel does not close it. */
+.sn-panel::before{content:"";position:absolute;left:0;right:0;top:-8px;height:8px}
+.sn-panel.is-wide{display:grid;grid-template-columns:1fr 1.2fr;gap:8px;min-width:480px}
+.sn-panel.is-wide[hidden]{display:none}
+.sn-group ul{margin:0;padding:0;list-style:none}
+.sn-label{display:flex;flex-direction:column;padding:6px 10px 6px;font-size:.78rem}
+.sn-label strong{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.sn-link{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;padding:7px 10px;border:0;border-radius:8px;background:none;
+  font:inherit;font-size:.9rem;color:var(--ink);text-align:left;text-decoration:none;cursor:pointer}
+.sn-link:hover{background:var(--sunk)}
+.sn-link small{font-size:.72rem;color:var(--text)}
+.sn-link.is-child{padding-left:24px;font-size:.86rem}
+.sn-link.is-soon{color:var(--text);cursor:default}
+.sn-link.is-soon:hover{background:none}
+
+.umenu-label{margin:6px 0 0;padding:8px 12px 2px;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--ink);border-top:1px solid var(--line)}
+.umenu-sub{display:flex;justify-content:space-between;gap:12px;padding:7px 12px 7px 20px;font-size:.88rem;color:var(--text)}
+.umenu-sub small{font-size:.72rem}
+
+/* Laptop widths where the header gets tight: the nav moves to its own row under the logo. */
+@media (max-width:900px){
+  .nav .wrap{flex-wrap:wrap;height:auto;padding-block:10px;row-gap:4px}
+  .site-nav{order:3;width:100%;margin:0 0 0 -12px}
+  .sn-bar>li{position:static}
+  .sn-panel,.sn-panel.is-wide{left:16px;right:16px;min-width:0}
+}
+@media (max-width:560px){
+  .sn-panel.is-wide{grid-template-columns:1fr}
+  .sn-top{padding:8px 10px;font-size:.9rem}
+}

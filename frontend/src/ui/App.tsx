@@ -8,8 +8,6 @@ import { Carousel } from './Carousel';
 import { GuestBand } from './GuestBand';
 import { Hero } from './Hero';
 import { LibrarySection } from './LibrarySection';
-import { LibraryPage } from './LibraryPage';
-import { navigate, usePath } from './router';
 import { Sprite } from './Sprite';
 import { Walkthrough } from './Walkthrough';
 import { useSearch } from './useSearch';
@@ -20,7 +18,6 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
   const [dialog, setDialog] = useState<{ mode: AuthMode; reason?: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const search = useSearch(api);
-  const path = usePath();
 
   // Restore the session if tokens are stored. Guests never see an error here.
   useEffect(() => {
@@ -29,8 +26,11 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
   }, [api]);
 
   const openLogin = useCallback((reason?: string) => setDialog({ mode: 'login', reason }), []);
-  // Every "as guest" button leads to the full-page Component Library.
-  const goLibrary = useCallback(() => navigate('/library'), []);
+  // Every "as guest" button goes to the Component Library section and puts the cursor in its search box.
+  const goLibrary = useCallback(() => {
+    document.getElementById('library')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    inputRef.current?.focus({ preventScroll: true });
+  }, []);
 
   const logout = async () => {
     await api.auth.logout().catch(() => undefined);
@@ -51,16 +51,6 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
     />
   );
 
-  if (path === '/library') {
-    return (
-      <>
-        <Sprite />
-        <LibraryPage search={search} user={user} onLogin={openLogin} onSignUp={() => setDialog({ mode: 'register' })} onLogout={logout} />
-        {authDialog}
-      </>
-    );
-  }
-
   return (
     <>
       <Sprite />
@@ -70,6 +60,8 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
         onSignUp={() => setDialog({ mode: 'register' })}
         onGuest={goLibrary}
         onLogout={logout}
+        onNeedLogin={openLogin}
+        onLibrary={goLibrary}
       />
       <main id="top">
         <Hero onGuest={goLibrary} />

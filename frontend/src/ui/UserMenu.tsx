@@ -1,6 +1,5 @@
-import { MouseEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { User } from '../index';
-import { linkTo } from './router';
 
 /** Signed-in header control: a three-line menu button that opens the account panel. */
 export function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
@@ -26,11 +25,6 @@ export function UserMenu({ user, onLogout }: { user: User; onLogout: () => void 
       document.removeEventListener('keydown', onKey);
     };
   }, [open]);
-
-  const go = (to: string) => (e: MouseEvent<HTMLAnchorElement>) => {
-    setOpen(false);
-    linkTo(to)(e);
-  };
 
   return (
     <div className="umenu" ref={rootRef}>
@@ -58,12 +52,17 @@ export function UserMenu({ user, onLogout }: { user: User; onLogout: () => void 
             <small>{user.email}</small>
           </div>
           <nav aria-label="Pages">
-            <a href="/" onClick={go('/')}>
+            <a href="#top" onClick={() => setOpen(false)}>
               Home
             </a>
-            <a href="/library" onClick={go('/library')}>
-              Component Library
-            </a>
+            <p className="umenu-label">Settings</p>
+            {/* Settings pages are not built yet. */}
+            <span className="umenu-sub is-soon" aria-disabled="true">
+              Account Profile <small>Soon</small>
+            </span>
+            <span className="umenu-sub is-soon" aria-disabled="true">
+              Team Members &amp; Roles <small>Soon</small>
+            </span>
           </nav>
           <button
             type="button"
