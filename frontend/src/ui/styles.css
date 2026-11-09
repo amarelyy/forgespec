@@ -387,9 +387,21 @@ button{font-family:inherit}
 /* ---------- landing order: hero (with 3D stage) → carousel → walkthrough → Component Library → guest band ---------- */
 /* Extra room under the hero so the 3D board has space before the carousel starts. */
 .hero{padding-block:72px clamp(112px,14vw,176px)}
-.hero-stage{min-height:420px;border:1px dashed var(--line);border-radius:16px;display:grid;place-items:center;
-  background:radial-gradient(circle at 50% 45%,var(--accent-soft),transparent 70%);color:var(--text);font-size:.85rem}
-@media (max-width:920px){.hero-stage{min-height:280px}}
+/* Narrow, tall headline column; the 3D board fills the wider right column. */
+.hero .hero-grid{grid-template-columns:minmax(0,500px) minmax(0,1fr);gap:40px 24px}
+.hero h1{max-width:10.5ch}
+.hero-stage{position:relative;min-height:560px;margin-right:-48px;
+  background:radial-gradient(ellipse 55% 45% at 50% 52%,var(--accent-soft),transparent 75%)}
+.hb-canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block;opacity:0;transition:opacity .6s ease}
+.hero-stage.is-ready .hb-canvas{opacity:1}
+.hb-tip{position:absolute;left:0;top:0;z-index:2;pointer-events:none;display:grid;gap:2px;max-width:240px;padding:10px 12px;border-radius:10px;
+  background:var(--ink);color:var(--bg);font-size:.8rem;line-height:1.35;box-shadow:var(--shadow);opacity:0;transition:opacity .15s}
+.hb-tip.is-on{opacity:1}
+.hb-tip strong{font-family:var(--font-display);font-size:.9rem}
+.hb-tip em{font-style:normal;font-weight:600;color:#93c5fd;margin-top:4px}
+.hb-tip.is-error em{color:#fca5a5}
+@media (max-width:1200px){.hero-stage{margin-right:0}}
+@media (max-width:920px){.hero .hero-grid{grid-template-columns:1fr}.hero h1{max-width:none}.hero-stage{min-height:340px;margin-inline:-16px}}
 
 .lib-section-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,480px);gap:32px 72px;align-items:center}
 .lib-section .sec-head{margin-bottom:0}

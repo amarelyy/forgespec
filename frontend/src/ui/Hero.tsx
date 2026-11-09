@@ -1,6 +1,16 @@
+import { HeroBoard } from './HeroBoard';
+import type { BoardPick } from './boardMotion';
+import { navigate } from './router';
+
 interface Props {
   onGuest: () => void;
 }
+
+/** Board parts link into the page: the MCU opens the library, the red sensor shows the check, the regulator the walkthrough. */
+const onPick = (id: BoardPick) => {
+  if (id === 'mcu') navigate('/library');
+  else document.getElementById(id === 'sensor' ? 'features' : 'tour')?.scrollIntoView({ behavior: 'smooth' });
+};
 
 export function Hero({ onGuest }: Props) {
   return (
@@ -26,10 +36,7 @@ export function Hero({ onGuest }: Props) {
           </p>
         </div>
 
-        {/* Reserved for the 3D circuit board (next step). Decorative only, so hidden from screen readers. */}
-        <div className="hero-stage" aria-hidden="true">
-          <span>3D circuit board goes here</span>
-        </div>
+        <HeroBoard onPick={onPick} />
       </div>
     </section>
   );
