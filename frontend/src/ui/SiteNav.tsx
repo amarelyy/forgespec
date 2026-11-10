@@ -5,7 +5,7 @@ import { MenuVisual } from './MenuVisual';
 /**
  * Main header navigation, following docs/image.png, styled as a mega menu: bold uppercase tabs centred in the header,
  * a full-width panel with text columns, and a preview on the right that explains whichever item is hovered.
- * Two items whose names are hard to picture (Sub-assemblies, Compare Versions) get a small 3D preview.
+ * Every item gets a small looping 3D preview that acts out what the page does.
  * Pages that are not built yet: guests are asked to log in (they need an account anyway); signed-in users see "Soon".
  */
 
@@ -84,13 +84,13 @@ export function SiteNav({ signedIn, onNeedLogin, onLibrary }: Props) {
         {
           label: 'Browse',
           items: [
-            { label: 'Search components', desc: 'Look up any part number and get its specs from the distributors.', onClick: onLibrary },
-            { label: 'Component details', desc: 'The datasheet values for a part, read and turned into numbers you can check.', onClick: onLibrary },
+            { label: 'Search components', desc: 'Type a part number and matching parts come straight from the distributors. No account needed.', visual: 'search', onClick: onLibrary },
+            { label: 'Component details', desc: 'Open a part to see its datasheet values. ForgeSpec reads text like "7V ~ 25V" and turns it into numbers it can check.', visual: 'details', onClick: onLibrary },
           ],
         },
         {
           label: 'Your parts',
-          items: [{ label: 'Custom Part Creator', desc: 'Add a part that no distributor lists, with your own specs.', login: 'Log in to create a custom part.', soon: true }],
+          items: [{ label: 'Custom Part Creator', desc: 'Can\'t find a part? Make your own: give it a shape, pins, a name and specs, and it is saved to your library.', visual: 'custom', login: 'Log in to create a custom part.', soon: true }],
         },
       ],
     },

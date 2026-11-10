@@ -1,5 +1,5 @@
 /**
- * Small looping 3D previews that act out what each Dashboard menu item is for.
+ * Small looping 3D previews that act out what each Dashboard and Component Library menu item is for.
  * Same look as the hero board (navy boards, dark chips, brand blue), built from simple shapes.
  *   'projects'    three project boards, each with a cost and a status light; the selection moves between them
  *   'create'      a "+" pulses, an empty board pops in, the first parts drop onto it
@@ -9,12 +9,15 @@
  *   'report'      a scan line passes over the board; parts turn green, the wrong one red
  *   'subassembly' a motor-driver module drops into a project board and clicks in
  *   'export'      the parts list fills a paper sheet (parts.csv) that slides off to the supplier
+ *   'search'      "LM7805" is typed into a search bar; parts that do not match sink away, the match rises and glows
+ *   'details'     an LM7805 beside its datasheet card; each raw value ("7V ~ 25V") gets its parsed number (7-25 V)
+ *   'custom'      a dashed outline fills in as a new part: body, pins, name, specs, then "added to your library"
  * Returns a cleanup function, like the other motion modules.
  */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
-export type MenuVisualKind = 'projects' | 'create' | 'bom' | 'history' | 'diff' | 'report' | 'subassembly' | 'export';
+export type MenuVisualKind = 'projects' | 'create' | 'bom' | 'history' | 'diff' | 'report' | 'subassembly' | 'export' | 'search' | 'details' | 'custom';
 
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 const outCubic = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -107,6 +110,14 @@ export function initMenuVisual(container: HTMLElement, kind: MenuVisualKind, red
     return { mesh: m, mat };
   };
   const at = <O extends THREE.Object3D>(o: O, x: number, y: number, z: number) => (o.position.set(x, y, z), o);
+  /** A standing TO-220 package (like the LM7805): body, metal tab behind, three legs. Base at y = 0. */
+  const to220 = (s = 1, mat: THREE.Material = M.chip) => {
+    const g = new THREE.Group();
+    g.add(box(0.9 * s, 1.0 * s, 0.36 * s, mat, 0, 0.95 * s, 0));
+    g.add(box(0.9 * s, 0.6 * s, 0.08 * s, M.pin, 0, 1.25 * s, -0.14 * s));
+    for (const x of [-0.28, 0, 0.28]) g.add(box(0.07 * s, 0.45 * s, 0.05 * s, M.pin, x * s, 0.225 * s, 0.05 * s));
+    return g;
+  };
 
   const root = new THREE.Group();
   scene.add(root);
@@ -410,6 +421,157 @@ export function initMenuVisual(container: HTMLElement, kind: MenuVisualKind, red
         sheet.rotation.set(0, -go * 0.3, go * 0.15);
         sheet.scale.setScalar(1);
       }
+    };
+  } else if (kind === 'search') {
+    root.add(at(board(5.0, 2.7), 0, 0, 0.25));
+    // The search bar, floating behind the tray, with one decal per typing step.
+    const bar = new THREE.Group();
+    bar.add(box(4.6, 0.1, 0.62, M.paper, 0, 0.05, 0));
+    const typed = ['', 'L', 'LM', 'LM7', 'LM78', 'LM780', 'LM7805'];
+    const steps = typed.map((q) => {
+      const l = decal(q ? `Search   ${q}|` : 'Search   part number', 4.3, 0.34, q ? 'rgba(15,23,42,.95)' : 'rgba(100,116,139,.9)', 'left');
+      l.mesh.position.set(0, 0.102, 0);
+      bar.add(l.mesh);
+      return l;
+    });
+    bar.position.set(0, 0.35, -1.65);
+    root.add(bar);
+    const names = ['STM32F407', 'ESP32', 'LM7805', 'BME280', 'LM317', 'RP2040', 'AMS1117', 'HC-SR04'];
+    const glowMat = tint();
+    const parts = names.map((name, i) => {
+      const x = -1.75 + (i % 4) * 1.17;
+      const z = -0.25 + Math.floor(i / 4) * 1.15;
+      const g = name.startsWith('LM') ? to220(0.42, name === 'LM7805' ? glowMat : M.chip) : chip(0.55, 0.5);
+      g.position.set(x, T, z);
+      root.add(g);
+      const l = decal(name, 1.05, 0.17);
+      l.mesh.position.set(x, T + 0.002, z + 0.45);
+      root.add(l.mesh);
+      // The letter (1-6) at which the typed text stops matching this part; parts that always match never shrink.
+      const stopsAt = typed.findIndex((q, k) => k > 0 && !name.startsWith(q));
+      return { name, g, label: l, stopsAt };
+    });
+    const letterAt = (k: number) => 0.6 + (k - 1) * 0.3; // when letter k appears
+    // 6.6 s loop: type one letter every 0.3 s; parts that stop matching shrink away; the match lifts and glows.
+    update = (time) => {
+      const t = reduce ? 4 : time % 6.6;
+      const reset = seg(t, 6.0, 6.6);
+      const n = reset > 0 ? 0 : Math.min(6, Math.max(0, Math.floor((t - 0.6) / 0.3) + 1));
+      steps.forEach((s, i) => (s.mesh.visible = i === n));
+      const q = typed[n]!; // only used for the reduced-motion still
+      const done = n === 6 ? seg(t, 2.6, 3.1) : 0;
+      for (const p of parts) {
+        // Timeline-based (not per frame), so it looks the same on a slow phone and a fast laptop.
+        const gone = p.stopsAt < 0 ? 0 : outCubic(seg(t, letterAt(p.stopsAt), letterAt(p.stopsAt) + 0.35));
+        const show = reduce ? (p.name.startsWith(q) ? 1 : 0) : Math.max(1 - gone, outCubic(reset));
+        p.g.scale.setScalar(Math.max(0.001, show));
+        p.g.visible = show > 0.02; // no leftover specks once a part has shrunk away
+        p.label.mat.opacity = show;
+        if (p.name === 'LM7805') p.g.position.y = T + outCubic(done) * 0.35;
+      }
+      glowMat.emissive.copy(BLUE).multiplyScalar(0.6 * done);
+    };
+  } else if (kind === 'details') {
+    const stand = new THREE.Group();
+    stand.add(board(1.6, 1.3));
+    stand.add(at(to220(1), 0, T, 0));
+    const tag = decal('LM7805', 1.2, 0.24);
+    tag.mesh.position.set(0, T + 0.002, 0.45);
+    stand.add(tag.mesh);
+    stand.position.set(-2.1, 0, -0.1);
+    root.add(stand);
+    const card = new THREE.Group();
+    card.add(box(3.5, 0.03, 2.5, M.paper, 0, 0.015, 0));
+    const title = decal('LM7805  datasheet', 2.4, 0.26, 'rgba(29,78,216,.95)', 'left');
+    title.mesh.position.set(-0.4, 0.032, -0.95);
+    card.add(title.mesh);
+    const hlMat = keep(new THREE.MeshBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0, depthWrite: false }));
+    const rows = [
+      ['Input', '"7V ~ 25V"', '7-25 V'],
+      ['Output', '"5V"', '5 V'],
+      ['Current', '"1.5A"', '1.5 A'],
+    ].map(([label, raw, value], i) => {
+      const z = -0.35 + i * 0.55;
+      const l = decal(label!, 0.9, 0.2, 'rgba(71,85,105,.95)', 'left');
+      l.mesh.position.set(-1.2, 0.032, z);
+      const r = decal(raw!, 1.2, 0.22, 'rgba(15,23,42,.85)', 'left');
+      r.mesh.position.set(-0.15, 0.032, z);
+      const v = decal(`-> ${value}`, 1.0, 0.22, 'rgba(29,78,216,1)', 'left');
+      v.mesh.position.set(1.15, 0.033, z);
+      const hlRow = keep(hlMat.clone());
+      const hl = new THREE.Mesh(keep(new THREE.PlaneGeometry(3.3, 0.42)), hlRow);
+      hl.rotation.x = -Math.PI / 2;
+      hl.position.set(0, 0.031, z);
+      card.add(hl, l.mesh, r.mesh, v.mesh);
+      return { l, r, v, hl, hlRow };
+    });
+    card.position.set(1.0, 0, 0.1);
+    root.add(card);
+    // 5.4 s loop: the raw text appears row by row, then each row is read and its number slides in (blue flash).
+    update = (time) => {
+      const t = reduce ? 4.2 : time % 5.4;
+      const reset = 1 - seg(t, 4.8, 5.4);
+      rows.forEach((row, i) => {
+        const show = seg(t, 0.2 + i * 0.25, 0.5 + i * 0.25) * reset;
+        row.l.mat.opacity = show;
+        row.r.mat.opacity = show;
+        const read = seg(t, 1.4 + i * 0.6, 1.8 + i * 0.6);
+        row.v.mat.opacity = read * reset;
+        row.v.mesh.position.x = 1.15 + (1 - outCubic(read)) * 0.4;
+        row.hlRow.opacity = 0.35 * Math.sin(Math.PI * seg(t, 1.3 + i * 0.6, 2.0 + i * 0.6));
+      });
+    };
+  } else if (kind === 'custom') {
+    root.add(board(3.8, 2.6));
+    // The new part: a dashed outline first, then the body grows up from the board, pins slide on, the name prints.
+    const W = 1.5;
+    const H = 0.36;
+    const Dp = 1.0;
+    const outlineMat = keep(new THREE.LineDashedMaterial({ color: 0x60a5fa, dashSize: 0.1, gapSize: 0.07, transparent: true }));
+    const outline = new THREE.LineSegments(keep(new THREE.EdgesGeometry(keep(new THREE.BoxGeometry(W, H, Dp)))), outlineMat);
+    outline.computeLineDistances();
+    outline.position.set(0, T + H / 2, -0.15);
+    root.add(outline);
+    const body = new THREE.Group();
+    body.add(box(W, H, Dp, M.chip, 0, H / 2, 0));
+    const name = decal('MY-SENSOR', 1.2, 0.24);
+    name.mesh.position.set(0, H + 0.002, 0);
+    body.add(name.mesh);
+    body.position.set(0, T, -0.15);
+    root.add(body);
+    const pins = [-1, 1].flatMap((side) =>
+      [0, 1, 2, 3].map((i) => {
+        const p = box(0.1, 0.05, 0.28, M.pin, -0.45 + i * 0.3, T + 0.03, 0);
+        root.add(p);
+        return { p, side, i };
+      }),
+    );
+    const spec = decal('3.3 V    20 mA', 2.0, 0.24, 'rgba(147,197,253,.95)');
+    spec.mesh.position.set(0, T + 0.002, 0.82);
+    root.add(spec.mesh);
+    const added = new THREE.Group();
+    added.add(box(2.6, 0.08, 0.42, std({ color: 0x047857, roughness: 0.5 }), 0, 0.04, 0));
+    const addedText = decal('added to your library', 2.4, 0.22, 'rgba(255,255,255,.98)');
+    addedText.mesh.position.set(0, 0.082, 0);
+    added.add(addedText.mesh);
+    added.position.set(0, T, 1.25);
+    root.add(added);
+    // 5.6 s loop: outline, body fills in, pins, name, specs, then the green "added" tag; hold; everything clears.
+    update = (time) => {
+      const t = reduce ? 4.2 : time % 5.6;
+      const clear = 1 - seg(t, 5.0, 5.6);
+      outlineMat.opacity = Math.min(seg(t, 0.1, 0.4), 1 - seg(t, 1.0, 1.4)) * 0.95;
+      const fill = outCubic(seg(t, 0.8, 1.4)) * clear;
+      body.scale.set(1, Math.max(0.001, fill), 1);
+      body.visible = fill > 0.002;
+      for (const { p, side, i } of pins) {
+        const k = outCubic(seg(t, 1.5 + i * 0.08, 1.9 + i * 0.08));
+        p.position.z = -0.15 + side * (Dp / 2 + 0.12 + (1 - k) * 1.3);
+        p.visible = k > 0 && clear > 0.01;
+      }
+      name.mat.opacity = seg(t, 2.3, 2.7);
+      spec.mat.opacity = seg(t, 2.8, 3.2) * clear;
+      added.scale.setScalar(Math.max(0.001, outBack(seg(t, 3.4, 3.9)) * clear));
     };
   }
 
