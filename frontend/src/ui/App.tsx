@@ -11,6 +11,7 @@ import { LibrarySection } from './LibrarySection';
 import { Sprite } from './Sprite';
 import { Walkthrough } from './Walkthrough';
 import { useSearch } from './useSearch';
+import { useHeavyScroll } from './useHeavyScroll';
 
 /** `api` is injectable so tests can run the page without a server. */
 export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
@@ -18,6 +19,7 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
   const [dialog, setDialog] = useState<{ mode: AuthMode; reason?: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const search = useSearch(api);
+  useHeavyScroll();
 
   // Restore the session if tokens are stored. Guests never see an error here.
   useEffect(() => {

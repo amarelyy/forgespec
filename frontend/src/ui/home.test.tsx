@@ -171,7 +171,7 @@ describe('landing page', () => {
     expect(pages.getByRole('link', { name: 'Home' })).toBeVisible();
     expect(pages.getByText('Settings')).toBeVisible();
     expect(pages.getByText(/Account Profile/)).toHaveAttribute('aria-disabled', 'true');
-    expect(pages.getByText(/Team Members & Roles/)).toHaveAttribute('aria-disabled', 'true');
+    expect(pages.getByText(/System Settings/)).toHaveAttribute('aria-disabled', 'true');
     await user.click(screen.getByRole('button', { name: 'Log Out' }));
     expect(await within(screen.getByRole('banner')).findByRole('button', { name: 'Sign Up' })).toBeVisible();
   });

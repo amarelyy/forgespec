@@ -61,7 +61,7 @@ export function UserMenu({ user, onLogout }: { user: User; onLogout: () => void 
               Account Profile <small>Soon</small>
             </span>
             <span className="umenu-sub is-soon" aria-disabled="true">
-              Team Members &amp; Roles <small>Soon</small>
+              System Settings <small>Soon</small>
             </span>
           </nav>
           <button

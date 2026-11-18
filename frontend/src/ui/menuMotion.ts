@@ -10,14 +10,13 @@
  *   'subassembly' a motor-driver module drops into a project board and clicks in
  *   'export'      the parts list fills a paper sheet (parts.csv) that slides off to the supplier
  *   'search'      "LM7805" is typed into a search bar; parts that do not match sink away, the match rises and glows
- *   'details'     an LM7805 beside its datasheet card; each raw value ("7V ~ 25V") gets its parsed number (7-25 V)
  *   'custom'      a dashed outline fills in as a new part: body, pins, name, specs, then "added to your library"
  * Returns a cleanup function, like the other motion modules.
  */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
-export type MenuVisualKind = 'projects' | 'create' | 'bom' | 'history' | 'diff' | 'report' | 'subassembly' | 'export' | 'search' | 'details' | 'custom';
+export type MenuVisualKind = 'projects' | 'create' | 'bom' | 'history' | 'diff' | 'report' | 'subassembly' | 'export' | 'search' | 'custom';
 
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 const outCubic = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -470,56 +469,6 @@ export function initMenuVisual(container: HTMLElement, kind: MenuVisualKind, red
         if (p.name === 'LM7805') p.g.position.y = T + outCubic(done) * 0.35;
       }
       glowMat.emissive.copy(BLUE).multiplyScalar(0.6 * done);
-    };
-  } else if (kind === 'details') {
-    const stand = new THREE.Group();
-    stand.add(board(1.6, 1.3));
-    stand.add(at(to220(1), 0, T, 0));
-    const tag = decal('LM7805', 1.2, 0.24);
-    tag.mesh.position.set(0, T + 0.002, 0.45);
-    stand.add(tag.mesh);
-    stand.position.set(-2.1, 0, -0.1);
-    root.add(stand);
-    const card = new THREE.Group();
-    card.add(box(3.5, 0.03, 2.5, M.paper, 0, 0.015, 0));
-    const title = decal('LM7805  datasheet', 2.4, 0.26, 'rgba(29,78,216,.95)', 'left');
-    title.mesh.position.set(-0.4, 0.032, -0.95);
-    card.add(title.mesh);
-    const hlMat = keep(new THREE.MeshBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0, depthWrite: false }));
-    const rows = [
-      ['Input', '"7V ~ 25V"', '7-25 V'],
-      ['Output', '"5V"', '5 V'],
-      ['Current', '"1.5A"', '1.5 A'],
-    ].map(([label, raw, value], i) => {
-      const z = -0.35 + i * 0.55;
-      const l = decal(label!, 0.9, 0.2, 'rgba(71,85,105,.95)', 'left');
-      l.mesh.position.set(-1.2, 0.032, z);
-      const r = decal(raw!, 1.2, 0.22, 'rgba(15,23,42,.85)', 'left');
-      r.mesh.position.set(-0.15, 0.032, z);
-      const v = decal(`-> ${value}`, 1.0, 0.22, 'rgba(29,78,216,1)', 'left');
-      v.mesh.position.set(1.15, 0.033, z);
-      const hlRow = keep(hlMat.clone());
-      const hl = new THREE.Mesh(keep(new THREE.PlaneGeometry(3.3, 0.42)), hlRow);
-      hl.rotation.x = -Math.PI / 2;
-      hl.position.set(0, 0.031, z);
-      card.add(hl, l.mesh, r.mesh, v.mesh);
-      return { l, r, v, hl, hlRow };
-    });
-    card.position.set(1.0, 0, 0.1);
-    root.add(card);
-    // 5.4 s loop: the raw text appears row by row, then each row is read and its number slides in (blue flash).
-    update = (time) => {
-      const t = reduce ? 4.2 : time % 5.4;
-      const reset = 1 - seg(t, 4.8, 5.4);
-      rows.forEach((row, i) => {
-        const show = seg(t, 0.2 + i * 0.25, 0.5 + i * 0.25) * reset;
-        row.l.mat.opacity = show;
-        row.r.mat.opacity = show;
-        const read = seg(t, 1.4 + i * 0.6, 1.8 + i * 0.6);
-        row.v.mat.opacity = read * reset;
-        row.v.mesh.position.x = 1.15 + (1 - outCubic(read)) * 0.4;
-        row.hlRow.opacity = 0.35 * Math.sin(Math.PI * seg(t, 1.3 + i * 0.6, 2.0 + i * 0.6));
-      });
     };
   } else if (kind === 'custom') {
     root.add(board(3.8, 2.6));

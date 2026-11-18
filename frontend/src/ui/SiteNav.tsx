@@ -84,8 +84,7 @@ export function SiteNav({ signedIn, onNeedLogin, onLibrary }: Props) {
         {
           label: 'Browse',
           items: [
-            { label: 'Search components', desc: 'Type a part number and matching parts come straight from the distributors. No account needed.', visual: 'search', onClick: onLibrary },
-            { label: 'Component details', desc: 'Open a part to see its datasheet values. ForgeSpec reads text like "7V ~ 25V" and turns it into numbers it can check.', visual: 'details', onClick: onLibrary },
+            { label: 'Search components', desc: 'Type a part number and matching parts come straight from the distributors. Open one to see its datasheet values; ForgeSpec turns text like "7V ~ 25V" into numbers it can check. No account needed.', visual: 'search', onClick: onLibrary },
           ],
         },
         {
