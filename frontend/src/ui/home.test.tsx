@@ -44,30 +44,44 @@ const PLACEHOLDER = 'Search part number, e.g. LM7805';
 const drawer = () => within(screen.getByLabelText('Component Library'));
 
 describe('landing page', () => {
-  it('shows every section, the three header actions, and no emoji anywhere', () => {
+  it('shows every section, one Sign In button plus Try as Guest in the header, and no emoji anywhere', () => {
     render(<App api={fakeApi(vi.fn())} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Catch the 3\.3\s+V part on your 5\s+V rail before you buy it\./);
-    expect(screen.getAllByRole('button', { name: 'Log In' })[0]).toBeVisible();
-    expect(screen.getAllByRole('button', { name: 'Sign Up' })[0]).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Try as Guest' })).toBeVisible();
+    // The headline is for screen readers only; the hero itself shows the four features and the board.
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/catch the 3\.3\s+V part on your 5\s+V rail before you buy it\./);
+    const header = within(screen.getByRole('banner'));
+    expect(header.getByRole('button', { name: 'Sign In' })).toBeVisible();
+    expect(header.getByRole('button', { name: 'Try as Guest' })).toBeVisible();
+    // Log In and Sign Up are merged into the Sign In window.
+    expect(header.queryByRole('button', { name: 'Log In' })).not.toBeInTheDocument();
+    expect(header.queryByRole('button', { name: 'Sign Up' })).not.toBeInTheDocument();
+    // Hero: what you can do, no buttons.
+    const feats = within(screen.getByRole('list', { name: 'What you can do' }));
+    for (const t of ['Search', 'Check', 'Versions', 'Export']) expect(feats.getByRole('button', { name: t })).toBeVisible();
+    const hero = within(document.getElementById('hero')!);
+    expect(hero.queryByRole('button', { name: 'Enter Workspace' })).not.toBeInTheDocument();
+    expect(hero.queryByRole('button', { name: 'Browse parts as guest' })).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText(PLACEHOLDER)).toBeVisible();
-    // moving carousel
-    for (const t of ['Catch wrong parts before you buy', 'See what changed between versions', 'Specs are read for you', 'Export a clean list for suppliers']) {
-      expect(screen.getByRole('heading', { name: t, hidden: true })).toBeInTheDocument();
-    }
-    expect(screen.getByRole('button', { name: 'Next slide' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Previous slide' })).toBeVisible();
-    // walkthrough, guest band, footer
+    // No carousel and no blue band any more.
+    expect(screen.queryByRole('button', { name: 'Next slide' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Look around first/ })).not.toBeInTheDocument();
+    // Walkthrough: the heading and the step names only.
     expect(screen.getByRole('heading', { name: 'Watch one sensor go from search to saved' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: /Look around first/ })).toBeVisible();
-    expect(screen.getByText(/2026 ForgeSpec Team/)).toBeVisible();
+    expect(screen.queryByText(/line-follower robot. Here is what happens/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Details come from the distributor and are turned into numbers.')).not.toBeInTheDocument();
+    // Footer: the ways in, contact, and the team line.
+    const footer = within(screen.getByRole('contentinfo'));
+    expect(footer.getByRole('button', { name: 'Enter Workspace' })).toBeVisible();
+    expect(footer.getByRole('button', { name: 'Browse parts as guest' })).toBeVisible();
+    expect(footer.getByRole('link', { name: 'GitHub repository' })).toHaveAttribute('href', 'https://github.com/amarelyy/forgespec');
+    expect(footer.getByRole('link', { name: 'Report a problem' })).toHaveAttribute('href', 'https://github.com/amarelyy/forgespec/issues');
+    expect(footer.getByText(/2026 ForgeSpec Team/)).toBeVisible();
     expect(document.body.textContent).not.toMatch(EMOJI_RE);
   });
 
-  it('lists the sample catalogue offline, with the raw datasheet string next to the parsed value', () => {
+  it('lists the sample catalogue offline, with the raw datasheet string next to the parsed value', async () => {
     render(<App api={fakeApi(vi.fn())} />);
     expect(screen.getByText('14 parts in this sample')).toBeVisible();
-    // BME280 is open by default
+    await userEvent.setup().click(drawer().getByRole('button', { name: /^BME280/ }));
     expect(drawer().getByText('"1.71V ~ 3.6V"')).toBeVisible();
     expect(drawer().getByText('1.71 – 3.6 V')).toBeVisible();
     expect(drawer().getByText('3.6 µA')).toBeVisible();
@@ -79,7 +93,7 @@ describe('landing page', () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Motors' }));
     expect(screen.getByText('2 parts in this sample')).toBeVisible();
-    expect(screen.getByText('MG996R')).toBeVisible();
+    expect(drawer().getByText('MG996R')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'All' }));
     await user.type(screen.getByRole('searchbox'), 'r');
     await new Promise((r) => setTimeout(r, 450));
@@ -121,14 +135,14 @@ describe('landing page', () => {
     expect(screen.queryByText('FIRST')).not.toBeInTheDocument();
   });
 
-  it('offers a custom part when nothing is found, and sends guests to log in for it', async () => {
+  it('offers a custom part when nothing is found, and sends guests to sign in for it', async () => {
     const search = vi.fn().mockResolvedValue(found([], { not_found: true, message: 'Component not found', suggestion: 'create_custom_part' }));
     render(<App api={fakeApi(search)} />);
     const user = userEvent.setup();
     await user.type(screen.getByRole('searchbox'), 'zzzz');
     expect(await screen.findByText('Component not found', {}, { timeout: 2000 })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Create custom part' }));
-    expect(await screen.findByRole('dialog')).toHaveTextContent('Log in to create a custom part.');
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Sign in to create a custom part.');
   });
 
   it('shows a readable error and falls back to the sample list when the server is unreachable', async () => {
@@ -139,23 +153,24 @@ describe('landing page', () => {
     expect(drawer().getByText('LM7805CT')).toBeVisible(); // the sample list still works
   });
 
-  it('guests are asked to log in only when they try to save, and login updates the header', async () => {
+  it('guests are asked to sign in only when they try to save, and signing in updates the header', async () => {
     const login = vi.fn().mockResolvedValue({ id: 'u1', email: 'a@b.co', name: 'Ana', created_at: '' });
     render(<App api={fakeApi(vi.fn(), { login })} />);
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: /Log in to save/ })); // the BME280 detail is open by default
+    await user.click(drawer().getByRole('button', { name: /^BME280/ }));
+    await user.click(screen.getByRole('button', { name: /Sign in to save/ }));
 
     const dialog = await screen.findByRole('dialog');
-    expect(dialog).toHaveTextContent('Log in to save parts to a project.');
+    expect(dialog).toHaveTextContent('Sign in to save parts to a project.');
     await user.type(within(dialog).getByLabelText('Email'), 'a@b.co');
     await user.type(within(dialog).getByLabelText('Password'), 'password123');
-    await user.click(within(dialog).getByRole('button', { name: 'Log In' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Sign In' }));
 
     expect(login).toHaveBeenCalledWith({ email: 'a@b.co', password: 'password123' });
-    // Signed in: the three auth buttons give way to the three-line account menu.
+    // Signed in: the account buttons give way to the three-line account menu.
     const menu = await screen.findByRole('button', { name: 'Account menu' });
     const header = within(screen.getByRole('banner'));
-    for (const name of ['Log In', 'Sign Up', 'Try as Guest']) expect(header.queryByRole('button', { name })).not.toBeInTheDocument();
+    for (const name of ['Sign In', 'Try as Guest']) expect(header.queryByRole('button', { name })).not.toBeInTheDocument();
     expect(menu).toHaveAttribute('aria-expanded', 'false');
 
     await user.click(menu);
@@ -173,7 +188,7 @@ describe('landing page', () => {
     expect(pages.getByText(/Account Profile/)).toHaveAttribute('aria-disabled', 'true');
     expect(pages.getByText(/System Settings/)).toHaveAttribute('aria-disabled', 'true');
     await user.click(screen.getByRole('button', { name: 'Log Out' }));
-    expect(await within(screen.getByRole('banner')).findByRole('button', { name: 'Sign Up' })).toBeVisible();
+    expect(await within(screen.getByRole('banner')).findByRole('button', { name: 'Sign In' })).toBeVisible();
   });
 
   it('shows field errors from the API in the sign-up form', async () => {
@@ -186,9 +201,30 @@ describe('landing page', () => {
     await user.type(within(dialog).getByLabelText('Name'), 'Ana');
     await user.type(within(dialog).getByLabelText('Email'), 'a@b.co');
     await user.type(within(dialog).getByLabelText('Password'), 'short');
-    await user.click(within(dialog).getByRole('button', { name: 'Sign Up' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Create account' }));
     expect(await within(dialog).findByText('at least 8 characters')).toBeVisible();
     expect(within(dialog).getByLabelText('Password')).toBeInvalid();
+  });
+
+  it('Sign In opens one window with Sign In and Sign Up tabs', async () => {
+    render(<App api={fakeApi(vi.fn())} />);
+    const user = userEvent.setup();
+    await user.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Sign In' }));
+    const dialog = await screen.findByRole('dialog');
+    const signIn = within(dialog).getByRole('tab', { name: 'Sign In' });
+    const signUp = within(dialog).getByRole('tab', { name: 'Sign Up' });
+    expect(signIn).toHaveAttribute('aria-selected', 'true');
+    expect(within(dialog).queryByLabelText('Name')).not.toBeInTheDocument();
+
+    await user.click(signUp);
+    expect(signUp).toHaveAttribute('aria-selected', 'true');
+    expect(within(dialog).getByLabelText('Name')).toBeVisible();
+    expect(within(dialog).getByRole('button', { name: 'Create account' })).toBeVisible();
+
+    // Arrow keys move between the tabs.
+    await user.keyboard('{ArrowLeft}');
+    expect(signIn).toHaveAttribute('aria-selected', 'true');
+    expect(signIn).toHaveFocus();
   });
 
   it('every guest button takes you to the Component Library search on this page', async () => {
@@ -211,10 +247,10 @@ describe('landing page', () => {
 describe('header navigation', () => {
   const main = () => within(screen.getByRole('navigation', { name: 'Main' }));
 
-  it('has a house icon for Home, and Dashboard and Component Library tabs with submenus from the site map', async () => {
+  it('has the logo as the Home link, and Dashboard and Component Library tabs with submenus from the site map', async () => {
     render(<App api={fakeApi(vi.fn())} />);
     const user = userEvent.setup();
-    expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Home' })).toHaveAttribute('href', '#top');
+    expect(within(screen.getByRole('banner')).getByRole('link', { name: 'ForgeSpec, home' })).toHaveAttribute('href', '#top');
     expect(main().queryByRole('link', { name: 'Home' })).not.toBeInTheDocument();
 
     const dash = main().getByRole('button', { name: 'Dashboard' });
@@ -232,12 +268,12 @@ describe('header navigation', () => {
     expect(document.body.textContent).not.toMatch(EMOJI_RE);
   });
 
-  it('sends guests to log in for project pages, and Search components jumps to the library', async () => {
+  it('sends guests to sign in for project pages, and Search components jumps to the library', async () => {
     render(<App api={fakeApi(vi.fn())} />);
     const user = userEvent.setup();
     await user.click(main().getByRole('button', { name: 'Dashboard' }));
     await user.click(main().getByRole('button', { name: /^Your projects/ }));
-    expect(await screen.findByRole('dialog')).toHaveTextContent('Log in to open your projects.');
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Sign in to open your projects.');
     await user.keyboard('{Escape}');
 
     await user.click(main().getByRole('button', { name: 'Component Library' }));
@@ -247,10 +283,60 @@ describe('header navigation', () => {
 });
 
 describe('hero', () => {
-  it('has an Enter Workspace button that asks guests to log in', async () => {
+  it('has an Enter Workspace button that asks guests to sign in', async () => {
     render(<App api={fakeApi(vi.fn())} />);
     await userEvent.setup().click(screen.getByRole('button', { name: 'Enter Workspace' }));
-    expect(await screen.findByRole('dialog')).toHaveTextContent('Log in to enter your workspace.');
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Sign in to enter your workspace.');
+  });
+});
+
+describe('header search', () => {
+  const field = () => screen.getByRole('combobox', { name: 'Search parts by part number' });
+
+  it('"/" focuses it and lists sample parts, without calling the API', async () => {
+    const search = vi.fn();
+    render(<App api={fakeApi(search)} />);
+    const user = userEvent.setup();
+    await user.keyboard('/');
+    await waitFor(() => expect(field()).toHaveFocus());
+    expect(field()).toHaveAttribute('aria-expanded', 'true');
+    const panel = within(screen.getByRole('dialog', { name: 'Part results' }));
+    expect(panel.getByText('ATMEGA328P-AU')).toBeVisible();
+    expect(search).not.toHaveBeenCalled();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: 'Part results' })).not.toBeInTheDocument();
+  });
+
+  it('shows live distributor results under the bar and opens a part to read its specs', async () => {
+    const search = vi.fn().mockResolvedValue(found([esp]));
+    render(<App api={fakeApi(search)} />);
+    const user = userEvent.setup();
+    await user.type(field(), 'esp32');
+    const panel = within(screen.getByRole('dialog', { name: 'Part results' }));
+    const row = await panel.findByRole('button', { name: /ESP32-WROOM-32\s*ESP32 module/ }, { timeout: 2000 });
+    expect(search).toHaveBeenLastCalledWith({ q: 'esp32', limit: 12 });
+
+    await user.click(row);
+    expect(row).toHaveAttribute('aria-expanded', 'true');
+    expect(panel.getByText('"500mA"')).toBeVisible();
+    expect(panel.getByText('0.5 A')).toBeVisible();
+
+    await user.click(panel.getByRole('button', { name: 'Sign in to save' }));
+    expect(await screen.findByRole('dialog', { name: 'Sign in to ForgeSpec' })).toHaveTextContent('Sign in to save parts to a project.');
+  });
+
+  it('walks the results with the arrow keys', async () => {
+    render(<App api={fakeApi(vi.fn())} />);
+    const user = userEvent.setup();
+    await user.click(field());
+    await user.keyboard('{ArrowDown}');
+    const items = within(screen.getByRole('dialog', { name: 'Part results' })).getAllByRole('button', { expanded: false });
+    await waitFor(() => expect(items[0]).toHaveFocus());
+    await user.keyboard('{ArrowDown}');
+    expect(items[1]).toHaveFocus();
+    await user.keyboard('{ArrowUp}{ArrowUp}');
+    expect(field()).toHaveFocus();
   });
 });
 
@@ -270,17 +356,53 @@ describe('menu preview', () => {
   });
 });
 
-describe('carousel', () => {
-  it('steps with the side arrows and wraps around', async () => {
+describe('hero features', () => {
+  it('shows one feature at a time and clicking another opens it; there is no pause button or timer line', async () => {
     render(<App api={fakeApi(vi.fn())} />);
     const user = userEvent.setup();
-    const reel = document.querySelector<HTMLElement>('.reel')!;
-    expect(reel.style.transform).toBe('translateX(-0%)');
-    await user.click(screen.getByRole('button', { name: 'Next slide' }));
-    expect(reel.style.transform).toBe('translateX(-100%)');
-    await user.click(screen.getByRole('button', { name: 'Previous slide' }));
-    await user.click(screen.getByRole('button', { name: 'Previous slide' }));
-    expect(reel.style.transform).toBe('translateX(-300%)');
+    const list = within(screen.getByRole('list', { name: 'What you can do' }));
+    expect(list.getByRole('button', { name: 'Search' })).toHaveAttribute('aria-expanded', 'true');
+    expect(list.getByRole('button', { name: 'Export' })).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(list.getByRole('button', { name: 'Export' }));
+    expect(list.getByRole('button', { name: 'Export' })).toHaveAttribute('aria-expanded', 'true');
+    expect(list.getByRole('button', { name: 'Search' })).toHaveAttribute('aria-expanded', 'false');
+    expect(list.getByText('total $7.41')).toBeInTheDocument();
+
+    expect(screen.queryByRole('button', { name: /pause/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('walkthrough map', () => {
+  it('has five stops on the road; clicking one makes it the active stop', async () => {
+    render(<App api={fakeApi(vi.fn())} />);
+    const user = userEvent.setup();
+    const stops = within(screen.getByRole('list', { name: 'Five steps' }));
+    const names = ['Search the part', 'Specs arrive', 'The check fails', 'Fix it', 'Save a version'];
+    names.forEach((n, i) => expect(stops.getByRole('button', { name: `${i + 1} ${n}` })).toBeInTheDocument());
+    await user.click(stops.getByRole('button', { name: '3 The check fails' }));
+    expect(stops.getByRole('button', { name: '3 The check fails' })).toHaveAttribute('aria-pressed', 'true');
+    expect(stops.getByRole('button', { name: '1 Search the part' })).toHaveAttribute('aria-pressed', 'false');
+  });
+});
+
+describe('library section', () => {
+  it('the Try part numbers search the library for that part', async () => {
+    const search = vi.fn().mockResolvedValue(found([esp]));
+    render(<App api={fakeApi(search)} />);
+    const user = userEvent.setup();
+    const tryRow = within(screen.getByRole('group', { name: 'Try a part number' }));
+    await user.click(tryRow.getByRole('button', { name: 'BME280' }));
+    expect(screen.getByRole('searchbox')).toHaveValue('BME280');
+    await waitFor(() => expect(search).toHaveBeenLastCalledWith({ q: 'BME280', limit: 12 }), { timeout: 2000 });
+  });
+
+  it('has Browse parts as guest and Sign Up next to the heading', async () => {
+    render(<App api={fakeApi(vi.fn())} />);
+    const user = userEvent.setup();
+    const section = within(document.getElementById('library')!);
+    await user.click(section.getByRole('button', { name: 'Sign Up' }));
+    expect(await screen.findByRole('dialog', { name: 'Create your account' })).toBeVisible();
   });
 });
 

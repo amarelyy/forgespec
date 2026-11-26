@@ -56,8 +56,30 @@ export function AuthDialog({ mode, reason, api, onModeChange, onClose, onSuccess
 
   return (
     <dialog ref={ref} className="dialog" aria-labelledby="auth-title" onClose={onClose} onClick={(e) => e.target === ref.current && onClose()}>
-      <form className="dialog__body" onSubmit={submit} noValidate>
-        <h2 id="auth-title">{register ? 'Create your account' : 'Log in to ForgeSpec'}</h2>
+      <div className="dialog__tabs" role="tablist" aria-label="Account">
+        {(['login', 'register'] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            id={`auth-tab-${m}`}
+            aria-selected={mode === m}
+            aria-controls="auth-form"
+            tabIndex={mode === m ? 0 : -1}
+            onClick={() => onModeChange(m)}
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+              const next = m === 'login' ? 'register' : 'login';
+              onModeChange(next);
+              document.getElementById(`auth-tab-${next}`)?.focus();
+            }}
+          >
+            {m === 'login' ? 'Sign In' : 'Sign Up'}
+          </button>
+        ))}
+      </div>
+      <form className="dialog__body" id="auth-form" role="tabpanel" aria-labelledby={`auth-tab-${register ? 'register' : 'login'}`} onSubmit={submit} noValidate>
+        <h2 id="auth-title">{register ? 'Create your account' : 'Sign in to ForgeSpec'}</h2>
         {reason && <p className="dialog__reason">{reason}</p>}
 
         {error && (
@@ -86,16 +108,10 @@ export function AuthDialog({ mode, reason, api, onModeChange, onClose, onSuccess
             Cancel
           </button>
           <button type="submit" className="btn btn--primary" disabled={busy}>
-            {busy ? 'Please wait...' : register ? 'Sign Up' : 'Log In'}
+            {busy ? 'Please wait…' : register ? 'Create account' : 'Sign In'}
           </button>
         </div>
 
-        <p className="dialog__switch">
-          {register ? 'Already have an account?' : 'New to ForgeSpec?'}{' '}
-          <button type="button" className="link-btn" onClick={() => onModeChange(register ? 'login' : 'register')}>
-            {register ? 'Log in' : 'Create an account'}
-          </button>
-        </p>
       </form>
     </dialog>
   );
