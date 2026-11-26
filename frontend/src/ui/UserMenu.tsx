@@ -55,6 +55,7 @@ export function UserMenu({ user, onLogout }: { user: User; onLogout: () => void 
             <a href="#top" onClick={() => setOpen(false)}>
               Home
             </a>
+            <a href="/dashboard">Dashboard</a>
             <p className="umenu-label">Settings</p>
             {/* Settings pages are not built yet. */}
             <span className="umenu-sub is-soon" aria-disabled="true">
