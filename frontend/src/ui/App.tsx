@@ -14,7 +14,7 @@ import { useSearch } from './useSearch';
 import { useHeavyScroll } from './useHeavyScroll';
 
 /** `api` is injectable so tests can run the page without a server. */
-export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
+export function App({ api = defaultApi, onEnterWorkspace }: { api?: ForgeSpecApi; onEnterWorkspace?: () => void }) {
   const [user, setUser] = useState<User | null>(null);
   const [dialog, setDialog] = useState<{ mode: AuthMode; reason?: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,6 +49,7 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
       onSuccess={(u) => {
         setUser(u);
         setDialog(null);
+        onEnterWorkspace?.(); // US-02: a successful login lands on the Dashboard
       }}
     />
   );
@@ -66,7 +67,7 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
         onLibrary={goLibrary}
       />
       <main id="top">
-        <Hero onGuest={goLibrary} signedIn={!!user} onNeedLogin={openLogin} />
+        <Hero onGuest={goLibrary} signedIn={!!user} onNeedLogin={openLogin} onEnterWorkspace={onEnterWorkspace} />
         <Carousel />
         <Walkthrough />
         <LibrarySection inputRef={inputRef} search={search} signedIn={!!user} onNeedLogin={openLogin} />

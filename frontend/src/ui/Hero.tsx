@@ -5,9 +5,10 @@ interface Props {
   onGuest: () => void;
   signedIn: boolean;
   onNeedLogin: (reason: string) => void;
+  onEnterWorkspace?: () => void;
 }
 
-export function Hero({ onGuest, signedIn, onNeedLogin }: Props) {
+export function Hero({ onGuest, signedIn, onNeedLogin, onEnterWorkspace }: Props) {
   // Board parts link into the page: the MCU to the library, the red sensor to the check, the regulator to the walkthrough.
   const onPick = (id: BoardPick) => {
     if (id === 'mcu') onGuest();
@@ -24,13 +25,11 @@ export function Hero({ onGuest, signedIn, onNeedLogin }: Props) {
             ForgeSpec is version control for your bill of materials. It checks every part for voltage and size problems while you plan.
           </p>
           <div className="hero-actions">
-            {/* The workspace page is not built yet: guests are asked to log in, signed-in users see it as coming soon. */}
+            {/* Guests are asked to log in first; signed-in users go straight to their projects. */}
             <button
               type="button"
               className="btn btn-primary hero-main"
-              disabled={signedIn}
-              title={signedIn ? 'The project workspace is coming soon' : undefined}
-              onClick={() => onNeedLogin('Log in to enter your workspace.')}
+              onClick={() => (signedIn ? onEnterWorkspace?.() : onNeedLogin('Log in to enter your workspace.'))}
             >
               Enter Workspace
             </button>
