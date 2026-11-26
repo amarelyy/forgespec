@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useState } from 'react';
+import { RefObject, useEffect, useRef, useState } from 'react';
 import { CATEGORIES, PartPicture } from './catalog';
 import { Icon } from './Sprite';
 import { useLibraryResults } from './useLibraryResults';
@@ -8,32 +8,109 @@ interface Props {
   inputRef: RefObject<HTMLInputElement | null>;
   search: ReturnType<typeof useSearch>;
   signedIn: boolean;
-  /** Guests are sent to log in for anything that writes. */
+  /** Guests are sent to sign in for anything that writes. */
   onNeedLogin: (reason: string) => void;
+  /** Fills the search box from outside (the "Try" part numbers); `n` changes on every request. */
+  request?: { q: string; n: number };
 }
 
-export function PartDrawer({ inputRef, search, signedIn, onNeedLogin }: Props) {
+const SCROLL_PX_PER_S = 24;
+
+/**
+ * Slowly scrolls the sample list by itself, so visitors see how many parts there are without touching it.
+ * At the bottom it waits, glides back to the top, and starts again. It stops while the pointer or focus is inside,
+ * for a few seconds after a touch or wheel, while the list is off screen, and when motion is reduced.
+ */
+function useAutoScroll(listRef: RefObject<HTMLElement | null>, rootRef: RefObject<HTMLElement | null>, enabled: boolean) {
+  useEffect(() => {
+    const list = listRef.current;
+    const root = rootRef.current;
+    if (!enabled || !list || !root || typeof IntersectionObserver === 'undefined') return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let raf = 0;
+    let last = 0;
+    let pos = list.scrollTop;
+    let visible = false;
+    let inside = false;
+    let holdUntil = performance.now() + 1200;
+    let rewind = false;
+
+    const tick = (t: number) => {
+      raf = requestAnimationFrame(tick);
+      const dt = last ? Math.min(64, t - last) : 0;
+      last = t;
+      if (!visible || inside || t < holdUntil) {
+        pos = list.scrollTop; // pick up wherever the visitor left it
+        return;
+      }
+      if (rewind) {
+        rewind = false;
+        list.scrollTo({ top: 0, behavior: 'smooth' });
+        holdUntil = t + 1800;
+        return;
+      }
+      const max = list.scrollHeight - list.clientHeight;
+      if (max <= 1) return;
+      if (pos >= max - 1) {
+        rewind = true;
+        holdUntil = t + 1600;
+        return;
+      }
+      pos = Math.min(max, pos + (SCROLL_PX_PER_S * dt) / 1000);
+      list.scrollTop = pos;
+    };
+
+    const io = new IntersectionObserver(([e]) => (visible = !!e?.isIntersecting), { threshold: 0.3 });
+    io.observe(list);
+    const enter = (e: PointerEvent) => e.pointerType === 'mouse' && (inside = true);
+    const leave = () => {
+      inside = false;
+      holdUntil = performance.now() + 1500;
+    };
+    const focusIn = () => (inside = true);
+    const focusOut = (e: FocusEvent) => !root.contains(e.relatedTarget as Node | null) && leave();
+    const nudge = () => (holdUntil = performance.now() + 4000); // the visitor scrolled it themselves
+    root.addEventListener('pointerenter', enter);
+    root.addEventListener('pointerleave', leave);
+    root.addEventListener('focusin', focusIn);
+    root.addEventListener('focusout', focusOut);
+    list.addEventListener('wheel', nudge, { passive: true });
+    list.addEventListener('touchstart', nudge, { passive: true });
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+      root.removeEventListener('pointerenter', enter);
+      root.removeEventListener('pointerleave', leave);
+      root.removeEventListener('focusin', focusIn);
+      root.removeEventListener('focusout', focusOut);
+      list.removeEventListener('wheel', nudge);
+      list.removeEventListener('touchstart', nudge);
+    };
+  }, [listRef, rootRef, enabled]);
+}
+
+export function PartDrawer({ inputRef, search, signedIn, onNeedLogin, request }: Props) {
   const [query, setQuery] = useState('');
   const [cat, setCat] = useState('All');
-  const [open, setOpen] = useState<string | null>('BME280');
+  const [open, setOpen] = useState<string | null>(null);
   const { groups, loading, failed, warnings, notFound, summary } = useLibraryResults(search, query, cat);
-
-  // "/" jumps to the search box from anywhere on the page.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== '/' || /input|textarea/i.test(document.activeElement?.tagName ?? '')) return;
-      e.preventDefault();
-      inputRef.current?.focus();
-      inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [inputRef]);
+    if (!request) return;
+    setQuery(request.q);
+    setCat('All');
+    setOpen(null);
+  }, [request]);
+  // Only the untouched sample list scrolls itself: not while searching or reading a part.
+  useAutoScroll(listRef, rootRef, !query.trim() && open === null);
 
   const toggle = (id: string) => setOpen((o) => (o === id ? null : id));
 
   return (
-    <div className="drawer" aria-label="Component Library">
+    <div className="drawer" aria-label="Component Library" ref={rootRef}>
       <div className="dr-head">
         <b>Component Library</b>
         <span className="tag">{signedIn ? 'Signed in' : 'Guest'}</span>
@@ -66,7 +143,7 @@ export function PartDrawer({ inputRef, search, signedIn, onNeedLogin }: Props) {
         ))}
       </div>
 
-      <div className="plist" id="plist" aria-label="Components" aria-live="polite" aria-busy={loading}>
+      <div className="plist" id="plist" ref={listRef} aria-label="Components" aria-live="polite" aria-busy={loading}>
         {failed && (
           <div className="pitem-note is-error" role="alert">
             {failed} Showing the sample list instead.
@@ -118,9 +195,9 @@ export function PartDrawer({ inputRef, search, signedIn, onNeedLogin }: Props) {
                           {signedIn ? (
                             <span>Project workspace is the next build step</span>
                           ) : (
-                            <button type="button" onClick={() => onNeedLogin('Log in to save parts to a project.')}>
+                            <button type="button" onClick={() => onNeedLogin('Sign in to save parts to a project.')}>
                               <Icon name="lock" size={14} />
-                              Log in to save
+                              Sign in to save
                             </button>
                           )}
                         </div>
@@ -144,7 +221,7 @@ export function PartDrawer({ inputRef, search, signedIn, onNeedLogin }: Props) {
               className="btn"
               disabled={signedIn}
               title={signedIn ? 'The custom part creator arrives with the project workspace' : undefined}
-              onClick={() => onNeedLogin('Log in to create a custom part.')}
+              onClick={() => onNeedLogin('Sign in to create a custom part.')}
             >
               Create custom part
             </button>

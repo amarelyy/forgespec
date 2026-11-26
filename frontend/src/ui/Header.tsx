@@ -1,51 +1,48 @@
-import type { User } from '../index';
-import { Icon, LogoMark } from './Sprite';
+import type { ForgeSpecApi, User } from '../index';
+import { HeaderSearch } from './HeaderSearch';
+import { LogoMark } from './Sprite';
 import { SiteNav } from './SiteNav';
 import { UserMenu } from './UserMenu';
 
 interface Props {
+  api: Pick<ForgeSpecApi, 'library'>;
   user: User | null;
-  onLogin: () => void;
-  onSignUp: () => void;
+  onSignIn: () => void;
   onGuest: () => void;
   onLogout: () => void;
   onNeedLogin: (reason: string) => void;
   onLibrary: () => void;
 }
 
-export function Header({ user, onLogin, onSignUp, onGuest, onLogout, onNeedLogin, onLibrary }: Props) {
+/** Six items at most: logo (home), two menus, search, Sign In, Try as Guest. Signing up lives inside the Sign In window. */
+export function Header({ api, user, onSignIn, onGuest, onLogout, onNeedLogin, onLibrary }: Props) {
   return (
     <header className="nav">
       <div className="wrap">
-        <div className="nav-brand">
-          <a className="nav-home" href="#top" aria-label="Home" title="Home">
-            <Icon name="home" />
-          </a>
-          <a className="logo" href="#top" aria-label="ForgeSpec home">
-            <LogoMark />
-            ForgeSpec
-          </a>
-        </div>
+        <a className="logo" href="#top" aria-label="ForgeSpec, home">
+          <LogoMark />
+          ForgeSpec
+        </a>
 
         <SiteNav signedIn={!!user} onNeedLogin={onNeedLogin} onLibrary={onLibrary} />
 
-        <nav className="nav-cta" aria-label="Account">
-          {user ? (
-            <UserMenu user={user} onLogout={onLogout} />
-          ) : (
-            <>
-              <button type="button" className="btn btn-text" onClick={onLogin}>
-                Log In
-              </button>
-              <button type="button" className="btn btn-outline" onClick={onSignUp}>
-                Sign Up
-              </button>
-              <button type="button" className="btn btn-primary" onClick={onGuest}>
-                Try as Guest
-              </button>
-            </>
-          )}
-        </nav>
+        <div className="nav-end">
+          <HeaderSearch api={api} signedIn={!!user} onNeedLogin={onNeedLogin} onLibrary={onLibrary} />
+          <nav className="nav-cta" aria-label="Account">
+            {user ? (
+              <UserMenu user={user} onLogout={onLogout} />
+            ) : (
+              <>
+                <button type="button" className="btn btn-outline" onClick={onSignIn}>
+                  Sign In
+                </button>
+                <button type="button" className="btn btn-primary nav-guest" onClick={onGuest}>
+                  Try as Guest
+                </button>
+              </>
+            )}
+          </nav>
+        </div>
       </div>
     </header>
   );

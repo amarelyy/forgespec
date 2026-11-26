@@ -32,7 +32,8 @@ export function useSearch(api: Pick<ForgeSpecApi, 'library'>) {
             : e instanceof Error
               ? e.message
               : 'Search failed';
-        setState({ status: 'error', query, message });
+        // Shown before "Showing the sample list instead.", so it must end like a sentence.
+        setState({ status: 'error', query, message: /[.!?]$/.test(message) ? message : `${message}.` });
       }
     },
     [api],

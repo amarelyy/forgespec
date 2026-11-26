@@ -4,14 +4,11 @@ import { api as defaultApi } from './api';
 import { AuthDialog, AuthMode } from './AuthDialog';
 import { Footer } from './Footer';
 import { Header } from './Header';
-import { Carousel } from './Carousel';
-import { GuestBand } from './GuestBand';
 import { Hero } from './Hero';
 import { LibrarySection } from './LibrarySection';
 import { Sprite } from './Sprite';
 import { Walkthrough } from './Walkthrough';
 import { useSearch } from './useSearch';
-import { useHeavyScroll } from './useHeavyScroll';
 
 /** `api` is injectable so tests can run the page without a server. */
 export function App({ api = defaultApi, onEnterWorkspace }: { api?: ForgeSpecApi; onEnterWorkspace?: () => void }) {
@@ -19,7 +16,6 @@ export function App({ api = defaultApi, onEnterWorkspace }: { api?: ForgeSpecApi
   const [dialog, setDialog] = useState<{ mode: AuthMode; reason?: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const search = useSearch(api);
-  useHeavyScroll();
 
   // Restore the session if tokens are stored. Guests never see an error here.
   useEffect(() => {
@@ -49,7 +45,7 @@ export function App({ api = defaultApi, onEnterWorkspace }: { api?: ForgeSpecApi
       onSuccess={(u) => {
         setUser(u);
         setDialog(null);
-        onEnterWorkspace?.(); // US-02: a successful login lands on the Dashboard
+        onEnterWorkspace?.(); // signing in takes you to the Dashboard
       }}
     />
   );
@@ -58,22 +54,20 @@ export function App({ api = defaultApi, onEnterWorkspace }: { api?: ForgeSpecApi
     <>
       <Sprite />
       <Header
+        api={api}
         user={user}
-        onLogin={() => openLogin()}
-        onSignUp={() => setDialog({ mode: 'register' })}
+        onSignIn={() => openLogin()}
         onGuest={goLibrary}
         onLogout={logout}
         onNeedLogin={openLogin}
         onLibrary={goLibrary}
       />
       <main id="top">
-        <Hero onGuest={goLibrary} signedIn={!!user} onNeedLogin={openLogin} onEnterWorkspace={onEnterWorkspace} />
-        <Carousel />
+        <Hero onGuest={goLibrary} />
         <Walkthrough />
-        <LibrarySection inputRef={inputRef} search={search} signedIn={!!user} onNeedLogin={openLogin} />
-        <GuestBand onGuest={goLibrary} onLogin={() => openLogin()} onSignUp={() => setDialog({ mode: 'register' })} />
+        <LibrarySection inputRef={inputRef} search={search} signedIn={!!user} onNeedLogin={openLogin} onGuest={goLibrary} onSignUp={() => setDialog({ mode: 'register' })} />
       </main>
-      <Footer />
+      <Footer signedIn={!!user} onNeedLogin={openLogin} onLibrary={goLibrary} onGuest={goLibrary} onEnterWorkspace={onEnterWorkspace} />
       {authDialog}
     </>
   );
