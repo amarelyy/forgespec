@@ -12,6 +12,7 @@ interface Props {
   /** Scrolls to the Component Library section and focuses its search box. */
   onLibrary: () => void;
   onGuest: () => void;
+  onEnterWorkspace?: () => void;
 }
 
 interface Contact {
@@ -30,7 +31,7 @@ type Preview = { label: string; desc: string; visual?: SiteItem['visual'] };
  * Footer laid out like the header's mega menu: every page in columns, a contact column, and a preview on the right
  * that explains whichever link is pointed at. The preview also holds the two ways in: the workspace and guest browsing.
  */
-export function Footer({ signedIn, onNeedLogin, onLibrary, onGuest }: Props) {
+export function Footer({ signedIn, onNeedLogin, onLibrary, onGuest, onEnterWorkspace }: Props) {
   const [preview, setPreview] = useState<Preview | null>(null);
   const groups = siteMenus(onLibrary).flatMap((m) => m.groups);
   // Projects and Browse/Your parts are short, so they share the first column; Project workspace gets its own.
@@ -120,9 +121,7 @@ export function Footer({ signedIn, onNeedLogin, onLibrary, onGuest }: Props) {
             <button
               type="button"
               className="btn btn-primary"
-              disabled={signedIn}
-              title={signedIn ? 'The project workspace is coming soon' : undefined}
-              onClick={() => onNeedLogin('Sign in to enter your workspace.')}
+              onClick={() => (signedIn ? onEnterWorkspace?.() : onNeedLogin('Sign in to enter your workspace.'))}
             >
               Enter Workspace
             </button>

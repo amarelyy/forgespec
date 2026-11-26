@@ -11,7 +11,7 @@ import { Walkthrough } from './Walkthrough';
 import { useSearch } from './useSearch';
 
 /** `api` is injectable so tests can run the page without a server. */
-export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
+export function App({ api = defaultApi, onEnterWorkspace }: { api?: ForgeSpecApi; onEnterWorkspace?: () => void }) {
   const [user, setUser] = useState<User | null>(null);
   const [dialog, setDialog] = useState<{ mode: AuthMode; reason?: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -45,6 +45,7 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
       onSuccess={(u) => {
         setUser(u);
         setDialog(null);
+        onEnterWorkspace?.(); // signing in takes you to the Dashboard
       }}
     />
   );
@@ -66,7 +67,7 @@ export function App({ api = defaultApi }: { api?: ForgeSpecApi }) {
         <Walkthrough />
         <LibrarySection inputRef={inputRef} search={search} signedIn={!!user} onNeedLogin={openLogin} onGuest={goLibrary} onSignUp={() => setDialog({ mode: 'register' })} />
       </main>
-      <Footer signedIn={!!user} onNeedLogin={openLogin} onLibrary={goLibrary} onGuest={goLibrary} />
+      <Footer signedIn={!!user} onNeedLogin={openLogin} onLibrary={goLibrary} onGuest={goLibrary} onEnterWorkspace={onEnterWorkspace} />
       {authDialog}
     </>
   );
